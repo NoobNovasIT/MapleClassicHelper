@@ -25,6 +25,35 @@ public static class ForegroundWindow
         {
             PInvoke.ShowWindow(hwnd, SHOW_WINDOW_CMD.SW_RESTORE);
         }
-        PInvoke.SetForegroundWindow(hwnd);
+        if (PInvoke.SetForegroundWindow(hwnd) && PInvoke.GetForegroundWindow() == hwnd)
+        {
+            return;
+        }
+        ForceForeground(hwnd);
+    }
+
+    /// <summary>
+    /// Windows chặn cướp focus khi cửa sổ khác (game) đang được dùng. Gắn tạm luồng nhập của mình vào
+    /// luồng của cửa sổ đang active thì được phép chuyển focus, xong tách ra ngay.
+    /// </summary>
+    private static unsafe void ForceForeground(HWND hwnd)
+    {
+        var foreground = PInvoke.GetForegroundWindow();
+        var foregroundThread = PInvoke.GetWindowThreadProcessId(foreground, null);
+        var currentThread = PInvoke.GetCurrentThreadId();
+        var attached = foregroundThread != 0 && foregroundThread != currentThread
+                       && PInvoke.AttachThreadInput(currentThread, foregroundThread, true);
+        try
+        {
+            PInvoke.BringWindowToTop(hwnd);
+            PInvoke.SetForegroundWindow(hwnd);
+        }
+        finally
+        {
+            if (attached)
+            {
+                PInvoke.AttachThreadInput(currentThread, foregroundThread, false);
+            }
+        }
     }
 }

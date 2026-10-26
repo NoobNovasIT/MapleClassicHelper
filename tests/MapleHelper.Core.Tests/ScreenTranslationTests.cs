@@ -81,7 +81,7 @@ public class ScreenTranslationTests
     {
         public (string, string)? LastLanguages { get; private set; }
 
-        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default)
+        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default, bool background = false)
         {
             LastLanguages = (from, to);
             return Task.FromResult($"{to}:{text}");

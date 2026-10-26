@@ -23,8 +23,8 @@ public sealed class NewsService(
     IMachineTranslator translator,
     ISettingsService settings) : INewsService
 {
-    /// <summary>Nghỉ giữa các request để không bị Google chặn vì gọi dồn.</summary>
-    private static readonly TimeSpan RequestGap = TimeSpan.FromMilliseconds(150);
+    /// <summary>Nghỉ giữa các request dịch tin chạy nền để không chạm giới hạn tần suất của Google.</summary>
+    private static readonly TimeSpan RequestGap = TimeSpan.FromMilliseconds(800);
 
     // Giữ nguyên tên riêng (MapleStory Classic World, Cash Shop...) thay vì để Google dịch nghĩa
     private readonly IMachineTranslator _translator = new GlossaryTranslator(translator, ProtectedTerms.NewsGlossary);
@@ -123,10 +123,10 @@ public sealed class NewsService(
         var summary = VietnamTime.Annotate(article.Summary.Replace('\n', ' ').Trim(), article.LiveDate);
         if (summary.Length == 0)
         {
-            return ((await _translator.TranslateAsync(title, "en", "vi", ct)).Trim(), "");
+            return ((await _translator.TranslateAsync(title, "en", "vi", ct, background: true)).Trim(), "");
         }
 
-        var translated = await _translator.TranslateAsync(title + "\n" + summary, "en", "vi", ct);
+        var translated = await _translator.TranslateAsync(title + "\n" + summary, "en", "vi", ct, background: true);
         if (SplitHeadline(translated) is { } split)
         {
             return split;
@@ -134,9 +134,9 @@ public sealed class NewsService(
 
         // Google gộp mất dòng: dịch riêng từng phần
         await Task.Delay(RequestGap, ct);
-        var titleVi = await _translator.TranslateAsync(title, "en", "vi", ct);
+        var titleVi = await _translator.TranslateAsync(title, "en", "vi", ct, background: true);
         await Task.Delay(RequestGap, ct);
-        var summaryVi = await _translator.TranslateAsync(summary, "en", "vi", ct);
+        var summaryVi = await _translator.TranslateAsync(summary, "en", "vi", ct, background: true);
         return (titleVi.Trim(), summaryVi.Trim());
     }
 

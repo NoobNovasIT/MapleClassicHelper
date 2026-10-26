@@ -70,7 +70,7 @@ public class MarkdownMachineTranslationTests
     {
         public List<string> Requests { get; } = [];
 
-        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default)
+        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default, bool background = false)
         {
             Requests.Add(text);
             return Task.FromResult(text.ToUpperInvariant());
@@ -98,7 +98,7 @@ public class GlossaryTranslatorTests
     {
         public string? Sent { get; private set; }
 
-        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default)
+        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default, bool background = false)
         {
             Sent = text;
             return Task.FromResult(text.Replace("Welcome to", "Chào mừng đến"));

@@ -26,3 +26,7 @@ DeleteObject
 DeleteDC
 WINDOW_EX_STYLE
 GetCursorPos
+GetWindowThreadProcessId
+GetCurrentThreadId
+AttachThreadInput
+BringWindowToTop

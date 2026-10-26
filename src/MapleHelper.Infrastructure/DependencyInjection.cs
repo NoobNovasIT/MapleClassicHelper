@@ -51,7 +51,8 @@ public static class DependencyInjection
             c.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         });
 
-        services.AddHttpClient<IMachineTranslator, GoogleTranslateClient>(c => c.Timeout = TimeSpan.FromSeconds(10));
+        // Timeout ngắn để chat chuyển sang endpoint dự phòng nhanh khi endpoint chính bị treo
+        services.AddHttpClient<IMachineTranslator, GoogleTranslateClient>(c => c.Timeout = TimeSpan.FromSeconds(6));
         services.AddSingleton<ITextRecognizer, WindowsOcrRecognizer>();
 
         // Tính năng

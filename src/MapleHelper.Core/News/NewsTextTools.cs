@@ -149,10 +149,10 @@ public sealed class ProtectedTerms
 /// <summary>Bọc một <see cref="IMachineTranslator"/> để mọi lần dịch đều giữ nguyên các tên riêng cho trước.</summary>
 public sealed class GlossaryTranslator(IMachineTranslator inner, IReadOnlyList<string> terms) : IMachineTranslator
 {
-    public async Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default)
+    public async Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default, bool background = false)
     {
         var protectedTerms = new ProtectedTerms();
-        var translated = await inner.TranslateAsync(protectedTerms.Protect(text, terms), from, to, ct);
+        var translated = await inner.TranslateAsync(protectedTerms.Protect(text, terms), from, to, ct, background);
         return protectedTerms.Restore(translated);
     }
 }
