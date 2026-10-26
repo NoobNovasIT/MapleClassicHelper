@@ -10,6 +10,7 @@ public sealed class AppSettings
     public OverlaySettings Overlay { get; set; } = new();
     public MapleDataSettings MapleData { get; set; } = new();
     public UpdateSettings Updates { get; set; } = new();
+    public TranslatorSettings Translator { get; set; } = new();
 
     /// <summary>Bấm X trên cửa sổ chính thì ẩn xuống khay hệ thống thay vì thoát.</summary>
     public bool MinimizeToTrayOnClose { get; set; } = true;
@@ -46,6 +47,13 @@ public sealed class MapleDataSettings
     public string ApiBaseUrl { get; set; } = "https://maplestory.io/api";
     public string Region { get; set; } = "GMS";
     public string Version { get; set; } = "83";
+}
+
+/// <summary>Azure Translator dùng khi Google Dịch bị chặn. Key lưu trong ISecretStore (SecretKeys.AzureTranslatorKey).</summary>
+public sealed class TranslatorSettings
+{
+    /// <summary>Region của resource Azure, vd "southeastasia". Để trống nếu resource là Global.</summary>
+    public string AzureRegion { get; set; } = "";
 }
 
 public sealed class UpdateSettings

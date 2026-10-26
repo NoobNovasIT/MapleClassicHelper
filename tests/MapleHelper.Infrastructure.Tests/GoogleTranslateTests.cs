@@ -6,11 +6,14 @@ using MapleHelper.Infrastructure.Translation;
 namespace MapleHelper.Infrastructure.Tests;
 
 /// <summary>
-/// Trạng thái tạm chặn của client là static, nên mọi test dùng GoogleTranslateClient nằm trong class này
-/// (xunit chạy tuần tự trong một class) và reset trước mỗi test.
+/// Trạng thái tạm chặn của client là static, nên mọi class test dùng GoogleTranslateClient nằm chung
+/// collection <see cref="SharedState"/> (xunit chạy tuần tự trong một collection) và reset trước mỗi test.
 /// </summary>
+[Collection(SharedState)]
 public sealed class GoogleTranslateTests
 {
+    public const string SharedState = "GoogleTranslateClient static state";
+
     private const string GtxHello = """[[["hello","xin chào",null,null,10]],null,"vi"]""";
 
     public GoogleTranslateTests() => GoogleTranslateClient.ResetCooldowns();

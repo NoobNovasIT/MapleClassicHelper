@@ -95,6 +95,45 @@
             </StackPanel>
         </Border>
 
+        <!-- Dịch dự phòng: Azure Translator -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0" DataContext="{Binding Translator}">
+            <StackPanel>
+                <TextBlock Text="Dịch dự phòng (Azure Translator)" Style="{StaticResource Text.SectionTitle}" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,4,0,12"
+                           Text="Chat và dịch vùng chọn dùng Google Dịch miễn phí. Khi Google tạm chặn vì gọi nhiều, app tự chuyển sang Azure Translator. Gói F0 miễn phí 2 triệu ký tự/tháng (khoảng 40.000 câu chat), hết quota thì chỉ báo lỗi, không tính tiền." />
+
+                <Grid Margin="0,0,0,4">
+                    <TextBlock Text="Key" Style="{StaticResource Text.Label}" />
+                    <Button Content="Tạo key trên Azure portal" Style="{StaticResource Button.Link}"
+                            Command="{Binding OpenPortalCommand}" HorizontalAlignment="Right" />
+                </Grid>
+                <PasswordBox controls:PasswordBoxBinding.Password="{Binding AzureKey, Mode=TwoWay}" />
+
+                <TextBlock Text="Region" Style="{StaticResource Text.Label}" Margin="0,12,0,4" />
+                <TextBox Text="{Binding AzureRegion, UpdateSourceTrigger=PropertyChanged}" Width="220" HorizontalAlignment="Left" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,4,0,0"
+                           Text="Lấy ở mục Keys and Endpoint của resource, ví dụ southeastasia. Để trống nếu resource chọn region Global." />
+
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Button Content="Kiểm tra" Command="{Binding TestCommand}" />
+                    <Button Content="Lưu" Style="{StaticResource Button.Primary}" Command="{Binding SaveCommand}" Margin="8,0,0,0" MinWidth="80" />
+                </StackPanel>
+                <TextBlock Text="{Binding Status}" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding Status, Converter={StaticResource NullToCollapsed}}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.SuccessText}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsError}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.DangerText}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
         <!-- Hotkey -->
         <Border Style="{StaticResource Card}" Margin="0,16,0,0" DataContext="{Binding Hotkeys}">
             <StackPanel>

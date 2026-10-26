@@ -51,8 +51,11 @@ public static class DependencyInjection
             c.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         });
 
-        // Timeout ngắn để chat chuyển sang endpoint dự phòng nhanh khi endpoint chính bị treo
-        services.AddHttpClient<IMachineTranslator, GoogleTranslateClient>(c => c.Timeout = TimeSpan.FromSeconds(6));
+        // Dịch máy: Google miễn phí trước, Azure Translator (key của người dùng) khi Google bị chặn.
+        // Timeout ngắn để chuyển nguồn nhanh khi một nguồn bị treo.
+        services.AddHttpClient<GoogleTranslateClient>(c => c.Timeout = TimeSpan.FromSeconds(6));
+        services.AddHttpClient<AzureTranslatorClient>(c => c.Timeout = TimeSpan.FromSeconds(8));
+        services.AddTransient<IMachineTranslator, FallbackMachineTranslator>();
         services.AddSingleton<ITextRecognizer, WindowsOcrRecognizer>();
 
         // Tính năng

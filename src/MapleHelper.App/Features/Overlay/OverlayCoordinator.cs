@@ -271,6 +271,8 @@ public sealed class OverlayCoordinator(
     private async Task RunItemLookupAsync(ResultPopupViewModel vm, string name, byte[] png)
     {
         vm.SetBusy($"Đang tra nguồn gốc \"{name}\"…");
+        // Có link NiaMeowDB ngay, kể cả khi AI lỗi hoặc hết quota
+        vm.SetExternalLinks(new ExternalLink("Xem trên NiaMeowDB", MeowDb.ItemSearchUrl(name)));
         try
         {
             var result = await itemLookup.LookupAsync(name);
@@ -279,6 +281,7 @@ public sealed class OverlayCoordinator(
             vm.Icon = ToImage(result.Item?.IconPng);
             vm.Body = result.Guide;
             vm.SetSources(result.Sources);
+            vm.SetExternalLinks(new ExternalLink("Xem trên NiaMeowDB", result.MeowDbUrl));
             vm.IsSaved = false;
             vm.HistoryId = await history.AddAsync(new HistoryEntry
             {
@@ -317,6 +320,7 @@ public sealed class OverlayCoordinator(
     private async Task RunQuestGuideAsync(ResultPopupViewModel vm, string name, byte[] png)
     {
         vm.SetBusy($"Đang tìm hướng dẫn \"{name}\"…");
+        vm.SetExternalLinks(new ExternalLink("Xem trên NiaMeowDB", MeowDb.QuestSearchUrl(name)));
         try
         {
             var result = await questGuide.GuideAsync(name);
@@ -324,8 +328,9 @@ public sealed class OverlayCoordinator(
             vm.Title = result.QuestName;
             vm.Body = result.Guide;
             vm.SetSources(result.Sources);
-            vm.ExternalLinkLabel = "Tìm video hướng dẫn trên YouTube";
-            vm.ExternalLinkUrl = result.YouTubeSearchUrl;
+            vm.SetExternalLinks(
+                new ExternalLink("Xem trên NiaMeowDB", result.MeowDbUrl),
+                new ExternalLink("Video trên YouTube", result.YouTubeSearchUrl));
             vm.IsSaved = false;
             vm.HistoryId = await history.AddAsync(new HistoryEntry
             {

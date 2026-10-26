@@ -79,9 +79,24 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <Button DockPanel.Dock="Bottom" Content="{Binding ExternalLinkLabel}" Style="{StaticResource Button.Link}"
-                    Command="{Binding OpenUrlCommand}" CommandParameter="{Binding ExternalLinkUrl}" HorizontalAlignment="Left" Margin="0,8,0,0"
-                    Visibility="{Binding ExternalLinkUrl, Converter={StaticResource NullToCollapsed}}" />
+            <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding ExternalLinks}" Margin="0,8,0,0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:ExternalLink}">
+                        <Button Command="{Binding DataContext.OpenUrlCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding Url}" Padding="10,4" Margin="0,0,6,0" FontSize="12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8A7;" Style="{StaticResource Text.Icon}" FontSize="11" />
+                                <TextBlock Text="{Binding Label}" Margin="6,0,0,0" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>

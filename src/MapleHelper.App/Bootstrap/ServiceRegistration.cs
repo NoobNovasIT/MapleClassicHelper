@@ -41,6 +41,7 @@ public static class ServiceRegistration
         services.AddSingleton<SavedViewModel>();
         services.AddSingleton<HistoryViewModel>();
         services.AddSingleton<HotkeySettingsViewModel>();
+        services.AddSingleton<TranslatorSettingsViewModel>();
         services.AddSingleton<SettingsViewModel>();
 
         return services;

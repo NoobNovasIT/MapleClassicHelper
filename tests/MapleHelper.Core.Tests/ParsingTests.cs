@@ -173,6 +173,22 @@ public class NewsArticleTests
     }
 }
 
+public class MeowDbTests
+{
+    [Fact]
+    public void Item_link_searches_exact_name_within_item_db()
+    {
+        var url = Uri.UnescapeDataString(MeowDb.ItemSearchUrl(" Orange Mushroom Cap "));
+        Assert.StartsWith("https://www.google.com/search?q=", url);
+        Assert.Contains("site:meowdb.com/msclassic/item-db \"Orange Mushroom Cap\"", url);
+    }
+
+    [Fact]
+    public void Quest_link_searches_classic_section() =>
+        Assert.Contains("site:meowdb.com/msclassic \"Father's Mushroom Stew\" quest",
+            Uri.UnescapeDataString(MeowDb.QuestSearchUrl("Father's Mushroom Stew")));
+}
+
 public class MapleNameMatchTests
 {
     private sealed record Named(string Name);

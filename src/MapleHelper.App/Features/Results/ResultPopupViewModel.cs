@@ -9,6 +9,8 @@ using MapleHelper.Core.History;
 
 namespace MapleHelper.App.Features.Results;
 
+public sealed record ExternalLink(string Label, string Url);
+
 /// <summary>Popup kết quả dùng chung cho nút 1 (dịch), 2 (item), 3 (quest).</summary>
 public sealed partial class ResultPopupViewModel(IHistoryRepository history) : ObservableObject
 {
@@ -33,8 +35,17 @@ public sealed partial class ResultPopupViewModel(IHistoryRepository history) : O
     [ObservableProperty] private string? _query;
     [ObservableProperty] private bool _canRequery;
 
-    [ObservableProperty] private string? _externalLinkLabel;
-    [ObservableProperty] private string? _externalLinkUrl;
+    /// <summary>Link mở ngoài: "Xem trên NiaMeowDB", video YouTube...</summary>
+    public ObservableCollection<ExternalLink> ExternalLinks { get; } = [];
+
+    public void SetExternalLinks(params ExternalLink[] links)
+    {
+        ExternalLinks.Clear();
+        foreach (var link in links)
+        {
+            ExternalLinks.Add(link);
+        }
+    }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ToggleSaveCommand))]

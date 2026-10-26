@@ -20,4 +20,6 @@ public interface ISecretStore
 public static class SecretKeys
 {
     public static string ApiKey(AiProviderKind kind) => $"ai.{kind}.apiKey";
+
+    public const string AzureTranslatorKey = "translator.azure.key";
 }

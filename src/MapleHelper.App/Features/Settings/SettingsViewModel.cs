@@ -50,6 +50,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ISettingsService settings,
         ISecretStore secrets,
         HotkeySettingsViewModel hotkeys,
+        TranslatorSettingsViewModel translator,
         IUpdateService updates,
         AppPaths paths,
         ILogger<SettingsViewModel> logger)
@@ -61,6 +62,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _paths = paths;
         _logger = logger;
         Hotkeys = hotkeys;
+        Translator = translator;
 
         Providers = registry.All.Select(ProviderOption.From).ToList();
         SelectedProvider = Providers.First(p => p.Kind == settings.Current.Ai.ActiveProvider);
@@ -77,6 +79,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     public HotkeySettingsViewModel Hotkeys { get; }
+
+    public TranslatorSettingsViewModel Translator { get; }
 
     public string Version => _updates.CurrentVersion;
 

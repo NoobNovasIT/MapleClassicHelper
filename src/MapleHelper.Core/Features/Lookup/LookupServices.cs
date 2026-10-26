@@ -3,12 +3,35 @@ using MapleHelper.Core.MapleData;
 
 namespace MapleHelper.Core.Features.Lookup;
 
-public sealed record ItemLookupResult(string ItemName, MapleItem? Item, string Guide, IReadOnlyList<AiSource> Sources);
+public sealed record ItemLookupResult(string ItemName, MapleItem? Item, string Guide, IReadOnlyList<AiSource> Sources)
+{
+    public string MeowDbUrl => MeowDb.ItemSearchUrl(ItemName);
+}
 
 public sealed record QuestGuideResult(string QuestName, MapleQuestSummary? Quest, string Guide, IReadOnlyList<AiSource> Sources)
 {
     public string YouTubeSearchUrl =>
         "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString($"MapleStory Classic {QuestName} quest");
+
+    public string MeowDbUrl => MeowDb.QuestSearchUrl(QuestName);
+}
+
+/// <summary>
+/// NiaMeowDB (meowdb.com/msclassic): database fan làm riêng cho MapleStory Classic World (drop, giá Free Market, quest).
+/// Trang không có API hay URL tìm kiếm, ID item cũng khác ID trong game, nên mở tìm kiếm Google giới hạn trong meowdb.
+/// Chỉ mở link cho người dùng xem, không tải dữ liệu tự động (điều khoản của trang cấm scraper khi chưa xin phép).
+/// </summary>
+public static class MeowDb
+{
+    public const string Credit = "NiaMeowDB (meowdb.com)";
+
+    public static string ItemSearchUrl(string itemName) => SiteSearch("meowdb.com/msclassic/item-db", itemName);
+
+    public static string QuestSearchUrl(string questName) => SiteSearch("meowdb.com/msclassic", questName, " quest");
+
+    /// <summary>Tìm đúng cụm tên (trong ngoặc kép) trên một phần của meowdb.</summary>
+    private static string SiteSearch(string site, string exactName, string extra = "") =>
+        "https://www.google.com/search?q=" + Uri.EscapeDataString($"site:{site} \"{exactName.Trim()}\"{extra}");
 }
 
 public interface IItemLookupService
@@ -48,8 +71,8 @@ internal static class LookupPrompts
         Dữ liệu tham khảo từ file game GMS v83 (có thể khác Classic World một chút):
         {2}
 
-        Hãy tra web (ưu tiên wiki và hướng dẫn cho MapleStory Classic World, rồi đến các bản cổ điển như MapleLegends, MapleRoyals, BasilMarket, Hidden Street)
-        và trả lời bằng tiếng Việt theo đúng khung markdown sau:
+        Hãy tra web và trả lời bằng tiếng Việt theo đúng khung markdown sau.
+        {3}
 
         ## Vật phẩm
         Một hai câu: loại vật phẩm, công dụng.
@@ -58,11 +81,26 @@ internal static class LookupPrompts
         ## Nhận từ nhiệm vụ
         - **Tên quest** — NPC giao
         ## Mua hoặc chế tạo
+        - NPC shop, chế tạo, giá tham khảo ở Free Market (nếu NiaMeowDB có)
         ## Mẹo
         - Nơi farm hiệu quả, lưu ý.
+        ## Nguồn
+        - Link các trang đã dùng
 
         Quy tắc: giữ nguyên tên quái, bản đồ, NPC, quest bằng tiếng Anh. Mục nào không có thông tin thì ghi "Chưa tìm thấy thông tin".
-        Không bịa số liệu. Ngắn gọn, tối đa khoảng 250 từ.
+        Không bịa số liệu. Ngắn gọn, tối đa khoảng 250 từ (không tính mục Nguồn).
+        """;
+
+    /// <summary>
+    /// NiaMeowDB là database riêng cho Classic World. Trang cho phép công cụ AI trích dẫn nếu ghi
+    /// "NiaMeowDB (meowdb.com)" và link đúng trang đã dùng (https://meowdb.com/reuse).
+    /// </summary>
+    public const string SourcePriority = """
+        Thứ tự ưu tiên nguồn:
+        1. NiaMeowDB (meowdb.com/msclassic): database dành riêng cho MapleStory Classic World (item, quái, drop, quest, NPC shop, giá Free Market). Ưu tiên số liệu ở đây khi khác các nguồn khác.
+        2. Wiki và hướng dẫn khác cho MapleStory Classic World.
+        3. Các bản cổ điển như MapleLegends, MapleRoyals, BasilMarket, Hidden Street (có thể khác Classic World, ghi rõ khi dùng).
+        Khi dùng thông tin từ NiaMeowDB, ghi trong mục Nguồn đúng dạng: "NiaMeowDB (meowdb.com)" kèm link trang cụ thể đã dùng.
         """;
 
     public const string QuestGuide = """
@@ -72,7 +110,8 @@ internal static class LookupPrompts
         Dữ liệu tham khảo từ file game GMS v83 (số lượng hoặc phần thưởng có thể khác Classic World):
         {2}
 
-        Hãy tra web (wiki, hướng dẫn, video YouTube về MapleStory Classic World hoặc các bản cổ điển) và trả lời bằng tiếng Việt theo khung markdown:
+        Hãy tra web (kể cả video YouTube) và trả lời bằng tiếng Việt theo khung markdown sau.
+        {3}
 
         ## Tổng quan
         - NPC giao: **tên NPC** ở **bản đồ**
@@ -85,9 +124,11 @@ internal static class LookupPrompts
         ## Mẹo
         ## Video
         - Link YouTube hướng dẫn nếu tìm được
+        ## Nguồn
+        - Link các trang đã dùng
 
         Quy tắc: giữ nguyên tên NPC, quái, bản đồ, vật phẩm bằng tiếng Anh. Không bịa, mục không rõ thì ghi "Chưa tìm thấy thông tin".
-        Ngắn gọn, tối đa khoảng 300 từ.
+        Ngắn gọn, tối đa khoảng 300 từ (không tính mục Nguồn).
         """;
 }
 
@@ -113,7 +154,7 @@ public sealed class ItemLookupService(IAiService ai, IMapleDataClient mapleData)
 
         var response = await ai.GenerateAsync(new AiRequest
         {
-            Prompt = string.Format(LookupPrompts.ItemGuide, LookupPrompts.Context, item?.Name ?? itemName, facts),
+            Prompt = string.Format(LookupPrompts.ItemGuide, LookupPrompts.Context, item?.Name ?? itemName, facts, LookupPrompts.SourcePriority),
             UseWebSearch = true,
             MaxOutputTokens = 8000,
         }, ct);
@@ -173,7 +214,7 @@ public sealed class QuestGuideService(IAiService ai, IMapleDataClient mapleData)
         var response = await ai.GenerateAsync(new AiRequest
         {
             Prompt = string.Format(LookupPrompts.QuestGuide, LookupPrompts.Context, name,
-                facts?.FactSheet ?? "(không tìm thấy trong dữ liệu game)"),
+                facts?.FactSheet ?? "(không tìm thấy trong dữ liệu game)", LookupPrompts.SourcePriority),
             UseWebSearch = true,
             MaxOutputTokens = 8000,
         }, ct);
