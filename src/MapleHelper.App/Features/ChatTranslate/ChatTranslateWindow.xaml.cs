@@ -14,13 +14,9 @@ public partial class ChatTranslateWindow : Window
     public ChatTranslateWindow(ChatTranslateViewModel viewModel)
     {
         InitializeComponent();
+        // Ô chat giữ nguyên trên màn hình (kể cả khi click sang game để dán), chỉ đóng bằng X hoặc Esc
         DataContext = _viewModel = viewModel;
-        viewModel.CloseRequested += (_, _) => CloseAndReturnFocus();
-        Deactivated += (_, _) =>
-        {
-            // Bấm ra ngoài (vào game) thì tự ẩn, trừ khi đang chờ dịch
-            if (IsVisible && !_viewModel.IsBusy) Hide();
-        };
+        Activated += (_, _) => InputBox.Focus();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -51,6 +47,7 @@ public partial class ChatTranslateWindow : Window
     {
         if (e.Key == Key.Enter && Keyboard.Modifiers != ModifierKeys.Shift)
         {
+            // Đang dịch thì bỏ qua Enter, ô nhập vẫn gõ được để không mất focus
             e.Handled = true;
             if (_viewModel.TranslateCommand.CanExecute(null))
             {

@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using MapleHelper.App.Services;
 using MapleHelper.Core.Features.Translation;
 using MapleHelper.Core.History;
-using MapleHelper.Core.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace MapleHelper.App.Features.ChatTranslate;
@@ -14,7 +13,6 @@ public sealed record ChatLine(string Vietnamese, string English);
 public sealed partial class ChatTranslateViewModel(
     ITranslationService translation,
     IHistoryRepository history,
-    ISettingsService settings,
     ILogger<ChatTranslateViewModel> logger) : ObservableObject
 {
     private const int MaxRecent = 5;
@@ -37,9 +35,6 @@ public sealed partial class ChatTranslateViewModel(
 
     [ObservableProperty]
     private bool _isError;
-
-    /// <summary>Phát khi đã copy xong và người dùng bật "tự đóng sau khi copy".</summary>
-    public event EventHandler? CloseRequested;
 
     public void Reset()
     {
@@ -69,12 +64,9 @@ public sealed partial class ChatTranslateViewModel(
 
             if (ClipboardService.TrySetText(english))
             {
-                Status = "Đã copy. Mở ô chat trong game rồi Ctrl+V.";
-                if (settings.Current.Overlay.AutoCloseChatAfterCopy)
-                {
-                    await Task.Delay(900);
-                    CloseRequested?.Invoke(this, EventArgs.Empty);
-                }
+                // Xoá ô nhập để gõ ngay câu tiếp theo; câu vừa dịch vẫn hiện ở trên và trong danh sách gần đây
+                Input = "";
+                Status = "Đã copy. Ctrl+V vào ô chat trong game, hoặc gõ tiếp câu khác.";
             }
             else
             {

@@ -61,9 +61,6 @@ public sealed class OverlaySettings
     public double? CenterX { get; set; }
     public double? CenterY { get; set; }
 
-    /// <summary>Sau khi copy câu chat thì tự đóng ô nhập và trả focus về game.</summary>
-    public bool AutoCloseChatAfterCopy { get; set; } = true;
-
     /// <summary>Mở overlay luôn khi khởi động app.</summary>
     public bool ShowOnStartup { get; set; }
 }

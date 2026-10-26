@@ -27,8 +27,7 @@
 
             <TextBox x:Name="InputBox" Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}"
                      AcceptsReturn="True" TextWrapping="Wrap" MinHeight="44" MaxHeight="120" FontSize="14"
-                     VerticalContentAlignment="Top" PreviewKeyDown="OnInputKeyDown"
-                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" />
+                     VerticalContentAlignment="Top" PreviewKeyDown="OnInputKeyDown" />
 
             <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="8" Padding="10,8" Margin="0,8,0,0"
                     Visibility="{Binding Output, Converter={StaticResource NullToCollapsed}}">
