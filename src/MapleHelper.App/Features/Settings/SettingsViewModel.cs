@@ -28,8 +28,8 @@ public sealed record ProviderOption(
     AiCapabilities Capabilities)
 {
     public string CapabilityText => Capabilities.HasFlag(AiCapabilities.Vision)
-        ? "Đọc ảnh, tìm kiếm web: dùng được cho dịch tin và nút 1–3 (nút 4 dùng Google Dịch, không cần AI)"
-        : "Chỉ xử lý text: dịch được tin tức, nhưng nút 1–3 cần AI đọc được ảnh";
+        ? "Đọc ảnh, tìm kiếm web: dùng được cho nút 2 (tìm item) và nút 3 (quest)"
+        : "Chỉ xử lý text: không đọc được ảnh nên không dùng được cho nút 2 và nút 3";
 
     public static ProviderOption From(IAiProvider p) =>
         new(p.Kind, p.DisplayName, p.DefaultModel, p.SuggestedModels, p.ApiKeyUrl, p.Capabilities);

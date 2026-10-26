@@ -6,7 +6,7 @@ namespace MapleHelper.Infrastructure.Persistence;
 /// <summary>SQLite trong %AppData%\MapleClassicHelper\data.db. Tạo bảng và nâng cấp schema theo PRAGMA user_version.</summary>
 public sealed class AppDatabase
 {
-    private const int SchemaVersion = 1;
+    private const int SchemaVersion = 2;
 
     private readonly string _connectionString;
     private readonly SemaphoreSlim _initLock = new(1, 1);
@@ -81,7 +81,11 @@ public sealed class AppDatabase
                     """);
             }
 
-            // Bản sau thêm cột/bảng: if (version < 2) { ... }
+            if (version < 2)
+            {
+                // Tin tức chuyển từ AI sang Google Dịch có giữ tên riêng: xoá bản dịch cũ để dịch lại một lần
+                await connection.ExecuteAsync("UPDATE news_articles SET title_vi = NULL, summary_vi = NULL, body_vi = NULL");
+            }
 
             await connection.ExecuteAsync($"PRAGMA user_version = {SchemaVersion}");
             _initialized = true;

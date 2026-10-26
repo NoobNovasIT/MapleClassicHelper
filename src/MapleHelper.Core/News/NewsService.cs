@@ -1,7 +1,4 @@
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using MapleHelper.Core.Ai;
+using MapleHelper.Core.Features.Translation;
 using MapleHelper.Core.Settings;
 
 namespace MapleHelper.Core.News;
@@ -19,37 +16,18 @@ public interface INewsService
     Task<NewsArticle?> GetDetailAsync(long id, CancellationToken ct = default);
 }
 
+/// <summary>Tin tức dịch bằng Google Dịch (nhanh, không tốn quota AI). AI chỉ dùng cho tìm item và quest.</summary>
 public sealed class NewsService(
     INewsSource source,
     INewsRepository repository,
-    IAiService ai,
+    IMachineTranslator translator,
     ISettingsService settings) : INewsService
 {
-    private const int TranslateBatchSize = 8;
-    private const int BodyChunkChars = 7000;
+    /// <summary>Nghỉ giữa các request để không bị Google chặn vì gọi dồn.</summary>
+    private static readonly TimeSpan RequestGap = TimeSpan.FromMilliseconds(150);
 
-    internal const string SystemPrompt =
-        "Bạn dịch tin tức chính thức của MapleStory (Nexon) sang tiếng Việt cho cộng đồng người chơi Việt Nam. Văn phong tự nhiên, rõ ràng.";
-
-    internal const string ListPrompt = """
-        Dịch "title" và "summary" của từng tin dưới đây sang tiếng Việt.
-        - Giữ nguyên tên riêng: tên game, tên sự kiện, vật phẩm, NPC, bản đồ, số phiên bản (v.271...).
-        - "[Completed]" dịch là "[Đã xong]", "[Updated]" là "[Cập nhật]".
-        - Ngắn gọn như tiêu đề báo.
-        Chỉ trả về JSON array cùng thứ tự, mỗi phần tử: {"id": <id>, "title": "...", "summary": "..."}
-
-        """;
-
-    internal const string BodyPrompt = """
-        Dịch đoạn bài viết sau (định dạng markdown) sang tiếng Việt.
-        - Giữ nguyên định dạng markdown (#, -, **, |) và xuống dòng.
-        - Giữ nguyên tên riêng: vật phẩm, NPC, bản đồ, quái, kỹ năng, sự kiện, nút bấm trong game.
-        - Mốc thời gian (PDT, PST, PT, UTC, EDT...): giữ nguyên và thêm giờ Việt Nam (GMT+7) trong ngoặc,
-          ví dụ "4:00 AM PDT" thành "4:00 AM PDT (18:00 giờ VN)". Nếu đổi giờ làm sang ngày khác thì ghi rõ ngày.
-        Chỉ trả về bản dịch, không thêm lời dẫn.
-
-        """;
-
+    // Giữ nguyên tên riêng (MapleStory Classic World, Cash Shop...) thay vì để Google dịch nghĩa
+    private readonly IMachineTranslator _translator = new GlossaryTranslator(translator, ProtectedTerms.NewsGlossary);
     private readonly SemaphoreSlim _translateLock = new(1, 1);
     private bool _hasRefreshedOnce;
 
@@ -87,14 +65,21 @@ public sealed class NewsService(
         {
             var translated = 0;
             var pending = await repository.ListUntranslatedAsync(settings.Current.News.ClassicOnly, limit: 60, ct);
-            foreach (var batch in pending.Chunk(TranslateBatchSize))
+            foreach (var article in pending)
             {
-                var results = await TranslateListAsync(batch, ct);
-                foreach (var (id, title, summary) in results)
+                var (title, summary) = await TranslateHeadlineAsync(article, ct);
+                await repository.UpdateTranslationAsync(article.Id, title, summary, ct);
+                translated++;
+
+                // Cập nhật danh sách theo từng đợt nhỏ để người dùng thấy bản dịch hiện dần
+                if (translated % 5 == 0)
                 {
-                    await repository.UpdateTranslationAsync(id, title, summary, ct);
-                    translated++;
+                    Updated?.Invoke(this, EventArgs.Empty);
                 }
+                await Task.Delay(RequestGap, ct);
+            }
+            if (translated > 0)
+            {
                 Updated?.Invoke(this, EventArgs.Empty);
             }
             return translated;
@@ -121,19 +106,9 @@ public sealed class NewsService(
 
         if (string.IsNullOrEmpty(article.BodyVi))
         {
-            var markdown = HtmlText.ToMarkdown(article.BodyHtml);
-            var translated = new StringBuilder();
-            foreach (var chunk in SplitChunks(markdown, BodyChunkChars))
-            {
-                var response = await ai.GenerateAsync(new AiRequest
-                {
-                    SystemPrompt = SystemPrompt,
-                    Prompt = BodyPrompt + chunk,
-                    MaxOutputTokens = 16000,
-                }, ct);
-                translated.Append(response.Text.Trim()).Append("\n\n");
-            }
-            article.BodyVi = translated.ToString().Trim();
+            // Thêm giờ VN vào bản gốc trước khi dịch, Google giữ nguyên phần trong ngoặc
+            var markdown = VietnamTime.Annotate(HtmlText.ToMarkdown(article.BodyHtml), article.LiveDate);
+            article.BodyVi = await MarkdownMachineTranslation.TranslateAsync(_translator, markdown, ct);
             await repository.UpdateBodyAsync(id, article.BodyHtml, article.BodyVi, ct);
             Updated?.Invoke(this, EventArgs.Empty);
         }
@@ -141,66 +116,35 @@ public sealed class NewsService(
         return article;
     }
 
-    private async Task<IReadOnlyList<(long Id, string Title, string Summary)>> TranslateListAsync(
-        IReadOnlyList<NewsArticle> batch, CancellationToken ct)
+    /// <summary>Tiêu đề và tóm tắt gửi chung một request, mỗi phần một dòng.</summary>
+    private async Task<(string Title, string Summary)> TranslateHeadlineAsync(NewsArticle article, CancellationToken ct)
     {
-        var input = new JsonArray(batch.Select(a => (JsonNode)new JsonObject
+        var title = VietnamTime.Annotate(article.Title, article.LiveDate);
+        var summary = VietnamTime.Annotate(article.Summary.Replace('\n', ' ').Trim(), article.LiveDate);
+        if (summary.Length == 0)
         {
-            ["id"] = a.Id,
-            ["title"] = a.Title,
-            ["summary"] = a.Summary,
-        }).ToArray());
+            return ((await _translator.TranslateAsync(title, "en", "vi", ct)).Trim(), "");
+        }
 
-        var response = await ai.GenerateAsync(new AiRequest
+        var translated = await _translator.TranslateAsync(title + "\n" + summary, "en", "vi", ct);
+        if (SplitHeadline(translated) is { } split)
         {
-            SystemPrompt = SystemPrompt,
-            Prompt = ListPrompt + input.ToJsonString(new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }),
-            MaxOutputTokens = 8000,
-        }, ct);
+            return split;
+        }
 
-        return ParseListTranslation(response.Text, batch.Select(a => a.Id).ToHashSet());
+        // Google gộp mất dòng: dịch riêng từng phần
+        await Task.Delay(RequestGap, ct);
+        var titleVi = await _translator.TranslateAsync(title, "en", "vi", ct);
+        await Task.Delay(RequestGap, ct);
+        var summaryVi = await _translator.TranslateAsync(summary, "en", "vi", ct);
+        return (titleVi.Trim(), summaryVi.Trim());
     }
 
-    internal static IReadOnlyList<(long Id, string Title, string Summary)> ParseListTranslation(string text, IReadOnlySet<long> expectedIds)
+    internal static (string Title, string Summary)? SplitHeadline(string translated)
     {
-        if (AiJson.TryParse(text) is not JsonArray array)
-        {
-            return [];
-        }
-
-        var results = new List<(long, string, string)>();
-        foreach (var item in array)
-        {
-            if (item?["id"] is not JsonValue idValue || !long.TryParse(idValue.ToString(), out var id) || !expectedIds.Contains(id))
-            {
-                continue;
-            }
-            var title = item.GetString("title");
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                continue;
-            }
-            results.Add((id, title.Trim(), item.GetString("summary")?.Trim() ?? ""));
-        }
-        return results;
-    }
-
-    /// <summary>Cắt theo đoạn (dòng trống) để không cắt giữa câu.</summary>
-    internal static IEnumerable<string> SplitChunks(string text, int maxChars)
-    {
-        var current = new StringBuilder();
-        foreach (var paragraph in text.Split("\n\n"))
-        {
-            if (current.Length > 0 && current.Length + paragraph.Length > maxChars)
-            {
-                yield return current.ToString();
-                current.Clear();
-            }
-            current.Append(paragraph).Append("\n\n");
-        }
-        if (current.Length > 0)
-        {
-            yield return current.ToString();
-        }
+        var lines = translated.Replace("\r", "").Split('\n', 2);
+        return lines.Length == 2 && lines[0].Trim().Length > 0
+            ? (lines[0].Trim(), lines[1].Replace('\n', ' ').Trim())
+            : null;
     }
 }

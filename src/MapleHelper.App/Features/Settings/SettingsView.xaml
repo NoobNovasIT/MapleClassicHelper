@@ -24,7 +24,7 @@
             <StackPanel>
                 <TextBlock Text="Đơn vị AI" Style="{StaticResource Text.SectionTitle}" />
                 <TextBlock Style="{StaticResource Text.Hint}" Margin="0,4,0,16"
-                           Text="AI dùng để dịch, đọc ảnh chụp màn hình và tra cứu item/quest. Key được mã hoá và chỉ lưu trên máy này." />
+                           Text="AI chỉ dùng để tìm nguồn item và hướng dẫn quest. Dịch tin tức, dịch vùng chọn và chat dùng Google Dịch, không cần key. Key được mã hoá và chỉ lưu trên máy này." />
 
                 <TextBlock Text="Nhà cung cấp" Style="{StaticResource Text.Label}" />
                 <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}"

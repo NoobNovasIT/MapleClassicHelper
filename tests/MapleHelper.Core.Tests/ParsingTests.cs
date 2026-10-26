@@ -54,32 +54,89 @@ public class TranslationParsingTests
     }
 }
 
-public class NewsServiceParsingTests
+public class NewsHeadlineTests
 {
     [Fact]
-    public void List_translation_keeps_only_expected_ids_with_title()
+    public void Headline_splits_title_and_summary_lines()
     {
-        var text = """
-            [{"id": 1, "title": "Tin một", "summary": "Tóm tắt"},
-             {"id": 2, "title": ""},
-             {"id": 99, "title": "Lạ"}]
-            """;
+        Assert.Equal(("Tiêu đề", "Tóm tắt dài"), NewsService.SplitHeadline("Tiêu đề\nTóm tắt\ndài"));
+        Assert.Null(NewsService.SplitHeadline("chỉ một dòng"));
+    }
+}
 
-        var results = NewsService.ParseListTranslation(text, new HashSet<long> { 1, 2 });
+public class MarkdownMachineTranslationTests
+{
+    private sealed class UpperTranslator : IMachineTranslator
+    {
+        public List<string> Requests { get; } = [];
 
-        Assert.Equal([(1L, "Tin một", "Tóm tắt")], results);
+        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default)
+        {
+            Requests.Add(text);
+            return Task.FromResult(text.ToUpperInvariant());
+        }
     }
 
     [Fact]
-    public void Split_chunks_respects_paragraphs_and_limit()
+    public async Task Keeps_markdown_prefixes_and_bold_lines_and_batches_requests()
     {
-        var text = string.Join("\n\n", Enumerable.Range(0, 10).Select(i => new string((char)('a' + i), 30)));
+        var translator = new UpperTranslator();
+        var markdown = "## While in Debt\n\n**Notice**\n- First item\n1. Step one\nPlain **mixed** text";
 
-        var chunks = NewsService.SplitChunks(text, 70).ToList();
+        var result = await MarkdownMachineTranslation.TranslateAsync(translator, markdown, TestContext.Current.CancellationToken);
 
-        Assert.True(chunks.Count > 1);
-        Assert.All(chunks, c => Assert.True(c.Length <= 70 + 32));
-        Assert.Equal(text.Replace("\n", ""), string.Concat(chunks).Replace("\n", ""));
+        Assert.Equal("## WHILE IN DEBT\n\n**NOTICE**\n- FIRST ITEM\n1. STEP ONE\nPLAIN MIXED TEXT", result);
+        Assert.Single(translator.Requests);
+        Assert.DoesNotContain("#", translator.Requests[0]);
+        Assert.DoesNotContain("**", translator.Requests[0]);
+    }
+}
+
+public class GlossaryTranslatorTests
+{
+    private sealed class TranslateWords : IMachineTranslator
+    {
+        public string? Sent { get; private set; }
+
+        public Task<string> TranslateAsync(string text, string from, string to, CancellationToken ct = default)
+        {
+            Sent = text;
+            return Task.FromResult(text.Replace("Welcome to", "Chào mừng đến"));
+        }
+    }
+
+    [Fact]
+    public async Task Proper_nouns_survive_translation_and_longest_term_wins()
+    {
+        var inner = new TranslateWords();
+        var translator = new GlossaryTranslator(inner, ProtectedTerms.NewsGlossary);
+
+        var result = await translator.TranslateAsync("Welcome to MapleStory Classic World, Maplers!", "en", "vi",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal("Chào mừng đến MapleStory Classic World, Maplers!", result);
+        Assert.DoesNotContain("Classic", inner.Sent);
+    }
+}
+
+public class VietnamTimeTests
+{
+    private static readonly DateTimeOffset October = new(2026, 10, 22, 0, 0, 0, TimeSpan.Zero);
+
+    [Theory]
+    [InlineData("Maintenance at 4:00 AM PDT.", "Maintenance at 4:00 AM PDT (18:00 giờ VN).")]
+    [InlineData("Ends 11:59 PM PDT", "Ends 11:59 PM PDT (13:59 hôm sau giờ VN)")]
+    [InlineData("from 4:00 AM - 10:00 AM PDT", "from 4:00 AM - 10:00 AM PDT (18:00 – 00:00 hôm sau giờ VN)")]
+    [InlineData("at 7:00 PM PST", "at 7:00 PM PST (10:00 hôm sau giờ VN)")]
+    [InlineData("at 23:00 UTC", "at 23:00 UTC (06:00 hôm sau giờ VN)")]
+    public void Adds_vietnam_time(string input, string expected) =>
+        Assert.Equal(expected, VietnamTime.Annotate(input, October));
+
+    [Fact]
+    public void Skips_utc_note_inside_parentheses_and_bare_numbers()
+    {
+        Assert.Equal("4:00 AM PDT (18:00 giờ VN) (11:00 UTC)", VietnamTime.Annotate("4:00 AM PDT (11:00 UTC)", October));
+        Assert.Equal("Season 2 UTC", VietnamTime.Annotate("Season 2 UTC", October));
     }
 }
 

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MapleHelper.Core.Ai;
+using MapleHelper.Core.Features.Translation;
 using MapleHelper.Core.News;
 using MapleHelper.Core.Settings;
 using Microsoft.Extensions.Logging;
@@ -109,11 +109,9 @@ public sealed partial class NewsViewModel : ObservableObject
             await _news.TranslatePendingAsync();
             Status = null;
         }
-        catch (AiException ex)
+        catch (MachineTranslationException ex)
         {
-            Status = ex.Kind == AiErrorKind.MissingApiKey
-                ? "Chưa có API key nên tin chưa được dịch. Vào Cài đặt để nhập key."
-                : "Dịch tin thất bại: " + ex.Message;
+            Status = "Dịch tin thất bại: " + ex.Message;
         }
         catch (Exception ex)
         {
@@ -194,7 +192,7 @@ public sealed partial class ArticleDetailViewModel(
             Body = article?.BodyVi;
             OriginalBody = article?.BodyHtml is { } html ? HtmlText.ToMarkdown(html) : null;
         }
-        catch (AiException ex)
+        catch (MachineTranslationException ex)
         {
             Error = ex.Message;
             await LoadOriginalOnlyAsync();

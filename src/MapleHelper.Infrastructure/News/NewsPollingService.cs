@@ -1,4 +1,3 @@
-using MapleHelper.Core.Ai;
 using MapleHelper.Core.News;
 using MapleHelper.Core.Settings;
 using Microsoft.Extensions.Hosting;
@@ -24,10 +23,6 @@ public sealed class NewsPollingService(
                 var added = await news.RefreshAsync(stoppingToken);
                 logger.LogInformation("Đã lấy tin Nexon: {Added} bài mới", added);
                 await news.TranslatePendingAsync(stoppingToken);
-            }
-            catch (AiException ex) when (ex.Kind == AiErrorKind.MissingApiKey)
-            {
-                logger.LogInformation("Chưa có API key, bỏ qua dịch tin");
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
