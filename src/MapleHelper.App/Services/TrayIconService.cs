@@ -9,10 +9,11 @@ public sealed class TrayIconService : IDisposable
 {
     private TaskbarIcon? _icon;
 
-    public void Initialize(Action showMainWindow, Action exit)
+    public void Initialize(Action showMainWindow, Action exit, Action toggleOverlay)
     {
         var menu = new ContextMenu();
         menu.Items.Add(CreateMenuItem("Mở Maple Classic Helper", showMainWindow));
+        menu.Items.Add(CreateMenuItem("Bật / tắt overlay", toggleOverlay));
         menu.Items.Add(new Separator());
         menu.Items.Add(CreateMenuItem("Thoát", exit));
 

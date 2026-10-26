@@ -7,6 +7,9 @@ public sealed class AppSettings
     public AiSettings Ai { get; set; } = new();
     public List<HotkeyBinding> Hotkeys { get; set; } = HotkeyBinding.CreateDefaults();
     public NewsSettings News { get; set; } = new();
+    public OverlaySettings Overlay { get; set; } = new();
+    public MapleDataSettings MapleData { get; set; } = new();
+    public UpdateSettings Updates { get; set; } = new();
 
     /// <summary>Bấm X trên cửa sổ chính thì ẩn xuống khay hệ thống thay vì thoát.</summary>
     public bool MinimizeToTrayOnClose { get; set; } = true;
@@ -24,8 +27,45 @@ public sealed class AiSettings
 
 public sealed class NewsSettings
 {
-    public string SourceUrl { get; set; } = "https://www.nexon.com/maplestory/news/all?page=1&gameVersion=mscw";
+    /// <summary>
+    /// JSON mà trang nexon.com/maplestory/news dùng. Bài viết: {FeedUrl}/{id}. Ảnh: https://g.nexonstatic.com + imageThumbnail.
+    /// </summary>
+    public string FeedUrl { get; set; } = "https://g.nexonstatic.com/maplestory/cms/v1/news";
     public int PollIntervalMinutes { get; set; } = 30;
+
+    /// <summary>Chỉ lấy tin của MapleStory Classic World (bỏ tin của bản MapleStory hiện đại).</summary>
+    public bool ClassicOnly { get; set; } = true;
+
+    /// <summary>Hiện thông báo ở khay hệ thống khi có tin mới.</summary>
+    public bool NotifyNewArticles { get; set; } = true;
+}
+
+/// <summary>Nguồn dữ liệu game maplestory.io. GMS v83 là bản gần với Classic World nhất hiện có.</summary>
+public sealed class MapleDataSettings
+{
+    public string ApiBaseUrl { get; set; } = "https://maplestory.io/api";
+    public string Region { get; set; } = "GMS";
+    public string Version { get; set; } = "83";
+}
+
+public sealed class UpdateSettings
+{
+    /// <summary>Repo GitHub chứa Releases do Velopack tạo, ví dụ https://github.com/owner/MapleClassicHelper.</summary>
+    public string RepositoryUrl { get; set; } = "";
+    public bool CheckOnStartup { get; set; } = true;
+}
+
+public sealed class OverlaySettings
+{
+    /// <summary>Tâm nút tròn chính trên màn hình (DIP). Null = góc phải giữa màn hình chính.</summary>
+    public double? CenterX { get; set; }
+    public double? CenterY { get; set; }
+
+    /// <summary>Sau khi copy câu chat thì tự đóng ô nhập và trả focus về game.</summary>
+    public bool AutoCloseChatAfterCopy { get; set; } = true;
+
+    /// <summary>Mở overlay luôn khi khởi động app.</summary>
+    public bool ShowOnStartup { get; set; }
 }
 
 public enum HotkeyAction

@@ -12,9 +12,15 @@ public static class ForegroundWindow
 {
     public static void AllowAnyProcess() => PInvoke.AllowSetForegroundWindow(PInvoke.ASFW_ANY);
 
+    public static nint Current => PInvoke.GetForegroundWindow();
+
     public static void BringToFront(nint handle)
     {
         var hwnd = (HWND)handle;
+        if (handle == 0 || !PInvoke.IsWindow(hwnd))
+        {
+            return;
+        }
         if (PInvoke.IsIconic(hwnd))
         {
             PInvoke.ShowWindow(hwnd, SHOW_WINDOW_CMD.SW_RESTORE);

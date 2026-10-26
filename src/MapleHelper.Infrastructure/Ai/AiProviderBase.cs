@@ -22,6 +22,10 @@ public abstract class AiProviderBase(HttpClient http) : IAiProvider
     public abstract Task<IReadOnlyList<string>> ListModelsAsync(string apiKey, CancellationToken ct = default);
     public abstract Task<AiResponse> GenerateAsync(AiConnection connection, AiRequest request, CancellationToken ct = default);
 
+    /// <summary>Mặc định: model gợi ý đầu tiên còn tồn tại, không có thì null.</summary>
+    public virtual string? PickPreferredModel(IReadOnlyList<string> available) =>
+        SuggestedModels.FirstOrDefault(available.Contains);
+
     protected static HttpContent JsonContent(JsonNode body) =>
         new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
 

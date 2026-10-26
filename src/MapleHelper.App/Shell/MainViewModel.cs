@@ -1,8 +1,13 @@
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MapleHelper.App.Features.Placeholder;
+using MapleHelper.App.Features.History;
+using MapleHelper.App.Features.News;
+using MapleHelper.App.Features.Overlay;
+using MapleHelper.App.Features.Saved;
 using MapleHelper.App.Features.Settings;
+using MapleHelper.App.Services;
+using MapleHelper.Core.Settings;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MapleHelper.App.Shell;
 
@@ -10,30 +15,67 @@ public sealed record NavItem(string Title, string Glyph, object Page);
 
 public sealed partial class MainViewModel : ObservableObject
 {
-    public MainViewModel(SettingsViewModel settings)
+    private readonly OverlayCoordinator _overlay;
+    private readonly ISettingsService _settings;
+    private readonly NavItem _newsNav;
+
+    public MainViewModel(
+        NewsViewModel news,
+        SavedViewModel saved,
+        HistoryViewModel history,
+        SettingsViewModel settingsPage,
+        OverlayCoordinator overlay,
+        ISettingsService settings)
     {
+        _overlay = overlay;
+        _settings = settings;
+        _newsNav = new("Điểm tin", "", news);
         NavItems =
         [
-            new("Điểm tin", "", new PlaceholderViewModel("Điểm tin",
-                "Tin tức, sự kiện, bảo trì của Maple Classic World được dịch sang tiếng Việt.", "M3")),
-            new("Đã lưu", "", new PlaceholderViewModel("Đã lưu",
-                "Các bản tin và kết quả tra cứu bạn đã ghim.", "M3")),
-            new("Lịch sử tra cứu", "", new PlaceholderViewModel("Lịch sử tra cứu",
-                "Lịch sử dịch, tìm item và hướng dẫn quest.", "M4")),
-            new("Cài đặt", "", settings),
+            _newsNav,
+            new("Đã lưu", "", saved),
+            new("Lịch sử tra cứu", "", history),
+            new("Cài đặt", "", settingsPage),
         ];
-        SelectedNav = NavItems[^1];
+        _selectedNav = _newsNav;
+
+        saved.OpenNewsRequested += async (_, item) =>
+        {
+            SelectedNav = _newsNav;
+            await news.OpenCommand.ExecuteAsync(item);
+        };
+        settings.Changed += (_, _) => OnPropertyChanged(nameof(OverlayHotkeyText));
+        overlay.OverlayVisibilityChanged += (_, _) => OnPropertyChanged(nameof(OverlayButtonText));
     }
 
     public IReadOnlyList<NavItem> NavItems { get; }
 
-    public string OverlayHotkeyText => "Hotkey: Ctrl + Shift + M";
-
     [ObservableProperty]
-    private NavItem? _selectedNav;
+    private NavItem _selectedNav;
 
+    public string OverlayButtonText => _overlay.IsOverlayVisible ? "Tắt overlay" : "Overlay mode";
+
+    public string OverlayHotkeyText
+    {
+        get
+        {
+            var binding = _settings.Current.Hotkeys.FirstOrDefault(h => h.Action == HotkeyAction.ToggleOverlay && h.Enabled);
+            return binding is null || binding.VirtualKey == 0 ? "Chưa gán hotkey" : "Hotkey: " + HotkeyText.Format(binding);
+        }
+    }
+
+    public void ShowSettings() => SelectedNav = NavItems[^1];
+
+    /// <summary>Bật overlay và thu cửa sổ chính xuống khay để người dùng vào game.</summary>
     [RelayCommand]
-    private static void StartOverlay() =>
-        MessageBox.Show("Overlay mode sẽ có ở mốc M1.", "Maple Classic Helper",
-            MessageBoxButton.OK, MessageBoxImage.Information);
+    private void StartOverlay()
+    {
+        if (_overlay.IsOverlayVisible)
+        {
+            _overlay.HideOverlay();
+            return;
+        }
+        _overlay.ShowOverlay();
+        App.Current.Services.GetRequiredService<MainWindow>().Hide();
+    }
 }

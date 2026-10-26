@@ -1,0 +1,37 @@
+<UserControl x:Class="MapleHelper.App.Features.Saved.SavedView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:MapleHelper.App.Features.Saved"
+             xmlns:controls="clr-namespace:MapleHelper.App.Controls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:SavedViewModel}"
+             Loaded="OnLoaded">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../News/NewsCardTemplate.xaml" />
+                <ResourceDictionary Source="../History/HistoryEntryTemplate.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20">
+            <controls:PageBanner Title="Đã lưu" Subtitle="Tin tức và kết quả tra cứu bạn đã gắn sao" />
+
+            <TextBlock Text="Tin tức" Style="{StaticResource Text.SectionTitle}" Margin="0,18,0,10"
+                       Visibility="{Binding Articles.Count, Converter={StaticResource ZeroToVisible}, ConverterParameter=invert}" />
+            <ItemsControl ItemsSource="{Binding Articles}" ItemTemplate="{StaticResource NewsCard}" />
+
+            <TextBlock Text="Kết quả tra cứu" Style="{StaticResource Text.SectionTitle}" Margin="0,18,0,10"
+                       Visibility="{Binding Entries.Count, Converter={StaticResource ZeroToVisible}, ConverterParameter=invert}" />
+            <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource HistoryEntryCard}" />
+
+            <controls:EmptyState Sprite="mobs/mushmom" Title="Chưa lưu gì"
+                                 Text="Bấm ngôi sao trên một bản tin hoặc một kết quả tra cứu để giữ lại ở đây."
+                                 Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

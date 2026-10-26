@@ -3,7 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:MapleHelper.App.Shell"
         xmlns:controls="clr-namespace:MapleHelper.App.Controls"
-        xmlns:placeholder="clr-namespace:MapleHelper.App.Features.Placeholder"
+        xmlns:news="clr-namespace:MapleHelper.App.Features.News"
+        xmlns:saved="clr-namespace:MapleHelper.App.Features.Saved"
+        xmlns:history="clr-namespace:MapleHelper.App.Features.History"
         xmlns:settings="clr-namespace:MapleHelper.App.Features.Settings"
         Title="Maple Classic Helper"
         Icon="/Assets/Icons/app.ico"
@@ -13,8 +15,14 @@
         FontFamily="Segoe UI">
 
     <Window.Resources>
-        <DataTemplate DataType="{x:Type placeholder:PlaceholderViewModel}">
-            <placeholder:PlaceholderView />
+        <DataTemplate DataType="{x:Type news:NewsViewModel}">
+            <news:NewsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type saved:SavedViewModel}">
+            <saved:SavedView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type history:HistoryViewModel}">
+            <history:HistoryView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type settings:SettingsViewModel}">
             <settings:SettingsView />
@@ -47,7 +55,7 @@
                     <Button Style="{StaticResource Button.Primary}" Command="{Binding StartOverlayCommand}" Padding="12,10">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE768;" Style="{StaticResource Text.Icon}" FontSize="14" Foreground="White" />
-                            <TextBlock Text="Overlay mode" Margin="8,0,0,0" Foreground="White" FontWeight="Bold" />
+                            <TextBlock Text="{Binding OverlayButtonText}" Margin="8,0,0,0" Foreground="White" FontWeight="Bold" />
                         </StackPanel>
                     </Button>
                     <TextBlock Text="{Binding OverlayHotkeyText}" Style="{StaticResource Text.Hint}"

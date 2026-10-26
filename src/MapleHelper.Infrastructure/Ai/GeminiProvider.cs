@@ -5,15 +5,37 @@ using MapleHelper.Core.Ai;
 namespace MapleHelper.Infrastructure.Ai;
 
 /// <summary>Google Gemini (generativelanguage REST v1beta). Grounding qua tool google_search.</summary>
-public sealed class GeminiProvider(HttpClient http) : AiProviderBase(http)
+public sealed partial class GeminiProvider(HttpClient http) : AiProviderBase(http)
 {
     private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta";
 
     public override AiProviderKind Kind => AiProviderKind.Gemini;
     public override string DisplayName => "Google Gemini";
     public override AiCapabilities Capabilities => AiCapabilities.Vision | AiCapabilities.WebSearch;
-    public override string DefaultModel => "gemini-2.5-flash";
-    public override IReadOnlyList<string> SuggestedModels => ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+    // Alias "-latest" do Google trỏ tới bản Flash mới nhất, không bị gỡ như tên có số phiên bản
+    public override string DefaultModel => DefaultModelName;
+    public override IReadOnlyList<string> SuggestedModels => ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-pro-latest"];
+
+    /// <summary>Flash có số phiên bản cao nhất (bỏ lite/image/tts/live...), ưu tiên bản không preview.</summary>
+    public override string? PickPreferredModel(IReadOnlyList<string> available)
+    {
+        if (available.Contains(DefaultModelName))
+        {
+            return DefaultModelName;
+        }
+        string[] excluded = ["lite", "image", "tts", "live", "audio", "embedding", "exp", "thinking", "computer"];
+        return available
+            .Select(m => (Model: m, Match: FlashVersion().Match(m)))
+            .Where(x => x.Match.Success && !excluded.Any(e => x.Model.Contains(e, StringComparison.Ordinal)))
+            .OrderByDescending(x => double.Parse(x.Match.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture))
+            .ThenBy(x => x.Model.Contains("preview", StringComparison.Ordinal))
+            .ThenBy(x => x.Model.Length)
+            .Select(x => x.Model)
+            .FirstOrDefault();
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^gemini-(\d+(?:\.\d+)?)-flash")]
+    private static partial System.Text.RegularExpressions.Regex FlashVersion();
     public override string ApiKeyUrl => "https://aistudio.google.com/apikey";
 
     public override async Task<IReadOnlyList<string>> ListModelsAsync(string apiKey, CancellationToken ct = default)
@@ -24,7 +46,7 @@ public sealed class GeminiProvider(HttpClient http) : AiProviderBase(http)
 
     public override async Task<AiResponse> GenerateAsync(AiConnection connection, AiRequest request, CancellationToken ct = default)
     {
-        var body = BuildGenerateBody(request);
+        var body = BuildGenerateBody(connection.Model, request);
         var json = await SendAsync(() =>
         {
             var message = CreateRequest(HttpMethod.Post, $"/models/{connection.Model}:generateContent", connection.ApiKey);
@@ -51,7 +73,28 @@ public sealed class GeminiProvider(HttpClient http) : AiProviderBase(http)
         return message;
     }
 
-    internal static JsonObject BuildGenerateBody(AiRequest request)
+    /// <summary>
+    /// Overlay cần phản hồi nhanh: tắt thinking trên 2.5 Flash, để mức thấp trên Gemini 3.
+    /// Model khác (2.5 Pro không cho tắt) giữ mặc định.
+    /// </summary>
+    internal static JsonObject? BuildThinkingConfig(string model)
+    {
+        if (model.StartsWith("gemini-2.5-flash", StringComparison.Ordinal))
+        {
+            return new JsonObject { ["thinkingBudget"] = 0 };
+        }
+        if (model.StartsWith("gemini-3", StringComparison.Ordinal))
+        {
+            return new JsonObject { ["thinkingLevel"] = "low" };
+        }
+        return null;
+    }
+
+    internal static JsonObject BuildGenerateBody(AiRequest request) => BuildGenerateBody(DefaultModelName, request);
+
+    private const string DefaultModelName = "gemini-flash-latest";
+
+    internal static JsonObject BuildGenerateBody(string model, AiRequest request)
     {
         var parts = new JsonArray { new JsonObject { ["text"] = request.Prompt } };
         if (request.ImagePng is not null)
@@ -66,10 +109,16 @@ public sealed class GeminiProvider(HttpClient http) : AiProviderBase(http)
             });
         }
 
+        var generationConfig = new JsonObject { ["maxOutputTokens"] = request.MaxOutputTokens };
+        if (BuildThinkingConfig(model) is { } thinking)
+        {
+            generationConfig["thinkingConfig"] = thinking;
+        }
+
         var body = new JsonObject
         {
             ["contents"] = new JsonArray { new JsonObject { ["role"] = "user", ["parts"] = parts } },
-            ["generationConfig"] = new JsonObject { ["maxOutputTokens"] = request.MaxOutputTokens },
+            ["generationConfig"] = generationConfig,
         };
 
         if (!string.IsNullOrWhiteSpace(request.SystemPrompt))

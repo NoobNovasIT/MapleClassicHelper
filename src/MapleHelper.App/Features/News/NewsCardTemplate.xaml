@@ -1,0 +1,62 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:MapleHelper.App.Features.News">
+
+    <!-- Lệnh OpenCommand / ToggleSaveCommand / OpenOriginalCommand lấy từ DataContext của UserControl chứa danh sách -->
+        <!-- Thẻ tin: ảnh bên trái, tiêu đề/tóm tắt tiếng Việt bên phải -->
+        <DataTemplate x:Key="NewsCard" DataType="{x:Type local:NewsItemViewModel}">
+            <Border Style="{StaticResource Card}" Padding="12" Margin="0,0,0,10" Cursor="Hand">
+                <Border.InputBindings>
+                    <MouseBinding MouseAction="LeftClick"
+                                  Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                  CommandParameter="{Binding}" />
+                </Border.InputBindings>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="176" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border CornerRadius="8" ClipToBounds="True" Width="176" Height="99" Background="{StaticResource Brush.SurfaceAlt}" VerticalAlignment="Top">
+                        <Image Source="{Binding ImageUrl, Converter={StaticResource WebImage}}" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="14,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Style="{StaticResource Tag}" Background="{Binding CategoryBackground}">
+                                <TextBlock Text="{Binding CategoryLabel}" FontSize="11" FontWeight="Bold" Foreground="{Binding CategoryForeground}" />
+                            </Border>
+                            <TextBlock Text="{Binding DateText}" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="· Chưa dịch" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       Visibility="{Binding IsTranslated, Converter={StaticResource InverseBoolToVisibility}}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="Bold" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding OriginalTitle}" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" TextTrimming="CharacterEllipsis"
+                                   Visibility="{Binding OriginalTitle, Converter={StaticResource NullToCollapsed}}" />
+                        <TextBlock Text="{Binding Summary}" FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}" TextWrapping="Wrap"
+                                   Margin="0,6,0,0" MaxHeight="40" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Button Style="{StaticResource Button.Icon}" ToolTip="Lưu / bỏ lưu"
+                                Command="{Binding DataContext.ToggleSaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                            <TextBlock FontFamily="{StaticResource Font.Icons}" FontSize="14">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="&#xE734;" />
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSaved}" Value="True">
+                                                <Setter Property="Text" Value="&#xE735;" />
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Accent}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Button>
+                        <Button Content="&#xE8A7;" Style="{StaticResource Button.Icon}" ToolTip="Mở bài gốc trên nexon.com"
+                                Command="{Binding DataContext.OpenOriginalCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+</ResourceDictionary>

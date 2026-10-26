@@ -1,0 +1,38 @@
+<Window x:Class="MapleHelper.App.Features.Snipping.SnipWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chọn vùng"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        Background="Black" Cursor="Cross" FontFamily="Segoe UI">
+    <Grid x:Name="Root" MouseLeftButtonDown="OnMouseDown" MouseMove="OnMouseMove" MouseLeftButtonUp="OnMouseUp"
+          MouseRightButtonUp="OnCancel">
+        <!-- Ảnh màn hình đã chụp sẵn (đóng băng), để vùng chọn khớp đúng thứ người dùng thấy -->
+        <Image x:Name="Frozen" Stretch="Fill" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+
+        <!-- Lớp tối, khoét lỗ ở vùng chọn -->
+        <Path Fill="#80000000" IsHitTestVisible="False">
+            <Path.Data>
+                <CombinedGeometry GeometryCombineMode="Exclude">
+                    <CombinedGeometry.Geometry1>
+                        <RectangleGeometry x:Name="FullRect" />
+                    </CombinedGeometry.Geometry1>
+                    <CombinedGeometry.Geometry2>
+                        <RectangleGeometry x:Name="HoleRect" />
+                    </CombinedGeometry.Geometry2>
+                </CombinedGeometry>
+            </Path.Data>
+        </Path>
+
+        <Canvas IsHitTestVisible="False">
+            <Rectangle x:Name="Selection" Stroke="#F08A1C" StrokeThickness="2" StrokeDashArray="4 2" Visibility="Collapsed" />
+            <Border x:Name="SizeBadge" Background="#CC4A2C17" CornerRadius="4" Padding="6,2" Visibility="Collapsed">
+                <TextBlock x:Name="SizeText" Foreground="White" FontSize="11" />
+            </Border>
+        </Canvas>
+
+        <Border x:Name="Hint" Background="#E6FFF7E8" BorderBrush="#8A460B" BorderThickness="2" CornerRadius="10"
+                Padding="14,8" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,24,0,0" IsHitTestVisible="False">
+            <TextBlock x:Name="HintText" Foreground="#4A2C17" FontSize="14" FontWeight="SemiBold" />
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,11 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:res="clr-namespace:MapleHelper.App.Resources">
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <res:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
+    <res:NullToCollapsedConverter x:Key="NullToCollapsed" />
+    <res:InverseBoolConverter x:Key="InverseBool" />
+    <res:ZeroToVisibleConverter x:Key="ZeroToVisible" />
+    <res:WebImageConverter x:Key="WebImage" DecodeWidth="320" />
+    <res:WebImageConverter x:Key="WebImageLarge" DecodeWidth="1100" />
+</ResourceDictionary>

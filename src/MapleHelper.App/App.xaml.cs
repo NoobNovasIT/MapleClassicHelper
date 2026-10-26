@@ -1,8 +1,12 @@
 ﻿using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using MapleHelper.App.Features.Overlay;
 using MapleHelper.App.Services;
 using MapleHelper.App.Shell;
+using MapleHelper.Core.News;
+using MapleHelper.Core.Settings;
+using MapleHelper.Core.Updates;
 using MapleHelper.Native;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -39,12 +43,48 @@ public partial class App : Application
 
         await _host.StartAsync();
 
-        Services.GetRequiredService<TrayIconService>().Initialize(ShowMainWindow, ExitApplication);
+        var tray = Services.GetRequiredService<TrayIconService>();
+        var overlay = Services.GetRequiredService<OverlayCoordinator>();
+        tray.Initialize(ShowMainWindow, ExitApplication, overlay.ToggleOverlay);
         _instance.ActivationRequested += (_, _) => Dispatcher.BeginInvoke(ShowMainWindow);
+
+        // Resolve trên UI thread: GlobalHotkeyService tạo HWND nhận WM_HOTKEY
+        overlay.Initialize();
+        WatchNews(tray);
 
         if (!_startMinimized)
         {
             ShowMainWindow();
+        }
+        _ = CheckForUpdatesAsync(tray);
+    }
+
+    private void WatchNews(TrayIconService tray)
+    {
+        var settings = Services.GetRequiredService<ISettingsService>();
+        Services.GetRequiredService<INewsService>().NewArticlesFound += (_, articles) => Dispatcher.BeginInvoke(() =>
+        {
+            if (!settings.Current.News.NotifyNewArticles)
+            {
+                return;
+            }
+            var first = articles[0];
+            var more = articles.Count > 1 ? $" (+{articles.Count - 1} bài khác)" : "";
+            tray.ShowNotification("Tin mới từ MapleStory Classic World", (first.TitleVi ?? first.Title) + more);
+        });
+    }
+
+    private async Task CheckForUpdatesAsync(TrayIconService tray)
+    {
+        var settings = Services.GetRequiredService<ISettingsService>();
+        if (!settings.Current.Updates.CheckOnStartup)
+        {
+            return;
+        }
+        var result = await Services.GetRequiredService<IUpdateService>().CheckAsync();
+        if (result.Status == UpdateStatus.Available)
+        {
+            tray.ShowNotification("Có bản cập nhật mới", $"Phiên bản {result.NewVersion}. Vào Cài đặt → Cập nhật để cài.");
         }
     }
 

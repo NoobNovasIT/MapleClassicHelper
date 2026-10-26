@@ -95,15 +95,109 @@
             </StackPanel>
         </Border>
 
-        <!-- Chung -->
+        <!-- Hotkey -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0" DataContext="{Binding Hotkeys}">
+            <StackPanel>
+                <TextBlock Text="Hotkey" Style="{StaticResource Text.SectionTitle}" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,4,0,12"
+                           Text="Bấm vào ô rồi nhấn tổ hợp phím mới. Backspace để xoá. Hotkey hoạt động cả khi đang ở trong game." />
+                <ItemsControl ItemsSource="{Binding Rows}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:HotkeyRowViewModel}">
+                            <StackPanel Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200" />
+                                        <ColumnDefinition Width="220" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontSize="13" />
+                                    <controls:HotkeyBox Grid.Column="1" Modifiers="{Binding Modifiers}" VirtualKey="{Binding VirtualKey}"
+                                                        IsCapturing="{Binding IsCapturing}" />
+                                    <CheckBox Grid.Column="2" Content="Bật" IsChecked="{Binding Enabled}" Margin="12,0,0,0" />
+                                </Grid>
+                                <TextBlock Text="{Binding Error}" Foreground="{StaticResource Brush.DangerText}" FontSize="11" Margin="200,2,0,0"
+                                           Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="Áp dụng hotkey" Style="{StaticResource Button.Primary}" Command="{Binding ApplyCommand}" />
+                    <Button Content="Khôi phục mặc định" Command="{Binding ResetDefaultsCommand}" Margin="8,0,0,0" />
+                </StackPanel>
+                <TextBlock Text="{Binding Status}" FontSize="12" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding Status, Converter={StaticResource NullToCollapsed}}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource Brush.SuccessText}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsError}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.DangerText}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <!-- Overlay, tin tức, chung -->
         <Border Style="{StaticResource Card}" Margin="0,16,0,0">
             <StackPanel>
-                <TextBlock Text="Chung" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12" />
-                <CheckBox Content="Bấm X thì ẩn xuống khay hệ thống (hotkey vẫn hoạt động)"
-                          IsChecked="{Binding MinimizeToTrayOnClose}" />
+                <TextBlock Text="Tuỳ chọn" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12" />
+                <CheckBox Content="Mở overlay ngay khi khởi động app" IsChecked="{Binding ShowOverlayOnStartup}" Margin="0,0,0,8" />
+                <CheckBox Content="Chat Việt → Anh: copy xong tự đóng và quay lại game" IsChecked="{Binding AutoCloseChat}" Margin="0,0,0,8" />
+                <CheckBox Content="Điểm tin: chỉ hiện tin MapleStory Classic World" IsChecked="{Binding ClassicOnly}" Margin="0,0,0,8" />
+                <CheckBox Content="Điểm tin: thông báo ở khay hệ thống khi có tin mới" IsChecked="{Binding NotifyNewArticles}" Margin="0,0,0,8" />
+                <CheckBox Content="Bấm X thì ẩn xuống khay hệ thống (hotkey vẫn hoạt động)" IsChecked="{Binding MinimizeToTrayOnClose}" />
                 <TextBlock Style="{StaticResource Text.Hint}" Margin="0,12,0,0"
-                           Text="Tuỳ chỉnh hotkey sẽ có ở mốc M1." />
+                           Text="Overlay chỉ hiện trên game khi game chạy ở chế độ cửa sổ (Options → Graphics → chọn độ phân giải không có chữ &quot;Full Screen&quot;)." />
             </StackPanel>
+        </Border>
+
+        <!-- Cập nhật -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="Cập nhật" Style="{StaticResource Text.SectionTitle}" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,4,0,12"
+                           Text="App tự tải bản mới từ GitHub Releases của repo bên dưới. Chỉ bản cài bằng Setup.exe mới tự cập nhật được." />
+                <TextBlock Text="Repo GitHub" Style="{StaticResource Text.Label}" />
+                <TextBox Text="{Binding RepositoryUrl, UpdateSourceTrigger=PropertyChanged}" />
+                <CheckBox Content="Tự kiểm tra khi khởi động" IsChecked="{Binding CheckUpdatesOnStartup}" Margin="0,10,0,0" />
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="Kiểm tra cập nhật" Command="{Binding CheckUpdatesCommand}" />
+                    <Button Content="Cập nhật và khởi động lại" Style="{StaticResource Button.Primary}" Command="{Binding InstallUpdateCommand}"
+                            Margin="8,0,0,0" Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+                <TextBlock Text="{Binding UpdateStatus}" Style="{StaticResource Text.Hint}" FontSize="12.5" Margin="0,8,0,0"
+                           Visibility="{Binding UpdateStatus, Converter={StaticResource NullToCollapsed}}" />
+                <ProgressBar Value="{Binding UpdateProgress}" Height="6" Margin="0,8,0,0" Foreground="{StaticResource Brush.Accent}"
+                             Visibility="{Binding IsUpdating, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Giới thiệu -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <controls:AnimatedSprite Sprite="npcs/maple-administrator" VerticalAlignment="Top" Margin="0,0,16,0" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock Style="{StaticResource Text.SectionTitle}">
+                        <Run Text="Maple Classic Helper" />
+                        <Run Text="{Binding Version, Mode=OneWay}" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Normal" />
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Text.Hint}" FontSize="12.5" Margin="0,6,0,0"
+                               Text="Công cụ do cộng đồng làm cho người chơi Việt Nam. Không liên kết, không được Nexon tài trợ hay xác nhận. Hình ảnh và tên MapleStory thuộc bản quyền NEXON." />
+                    <TextBlock Style="{StaticResource Text.Hint}" FontSize="12.5" Margin="0,6,0,0"
+                               Text="Nguồn dữ liệu: tin tức từ nexon.com/maplestory, dữ liệu vật phẩm/quest và sprite từ maplestory.io (GMS v83)." />
+                    <Button Content="Mở thư mục dữ liệu và log" Style="{StaticResource Button.Link}" Command="{Binding OpenDataFolderCommand}"
+                            HorizontalAlignment="Left" Margin="0,10,0,0" />
+                </StackPanel>
+            </Grid>
         </Border>
     </StackPanel>
     </ScrollViewer>

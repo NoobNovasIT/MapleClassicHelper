@@ -1,0 +1,31 @@
+<UserControl x:Class="MapleHelper.App.Features.History.HistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:MapleHelper.App.Features.History"
+             xmlns:controls="clr-namespace:MapleHelper.App.Controls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:HistoryViewModel}"
+             Loaded="OnLoaded">
+    <UserControl.Resources>
+        <ResourceDictionary Source="HistoryEntryTemplate.xaml" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20">
+            <controls:PageBanner Title="Lịch sử tra cứu" Subtitle="Các lần dịch, tìm item, hỏi quest và chat đã làm" />
+
+            <Grid Margin="0,16,0,8">
+                <ListBox Style="{StaticResource ChipList}" ItemsSource="{Binding Filters}" SelectedItem="{Binding SelectedFilter}" DisplayMemberPath="Label" />
+                <Button Content="Xoá lịch sử" Command="{Binding ClearCommand}" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="12,5" />
+            </Grid>
+
+            <ItemsControl ItemsSource="{Binding Items}" ItemTemplate="{StaticResource HistoryEntryCard}" />
+
+            <controls:EmptyState Sprite="mobs/slime" Title="Chưa có gì ở đây"
+                                 Text="Dùng các nút trên overlay (hoặc hotkey Ctrl+Shift+1..4) khi đang chơi, kết quả sẽ được lưu lại ở đây."
+                                 Visibility="{Binding Items.Count, Converter={StaticResource ZeroToVisible}}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

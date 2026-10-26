@@ -15,6 +15,11 @@ public interface IAiProvider
     Task<IReadOnlyList<string>> ListModelsAsync(string apiKey, CancellationToken ct = default);
 
     Task<AiResponse> GenerateAsync(AiConnection connection, AiRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Chọn model nên dùng trong danh sách thật của nhà cung cấp, dùng khi model đang cấu hình đã bị gỡ (404).
+    /// </summary>
+    string? PickPreferredModel(IReadOnlyList<string> available);
 }
 
 public interface IAiProviderRegistry

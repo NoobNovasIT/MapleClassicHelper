@@ -4,6 +4,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MapleHelper.Core.Ai;
 using MapleHelper.Core.Settings;
+using MapleHelper.Core.Updates;
+using MapleHelper.Infrastructure;
 using Microsoft.Extensions.Logging;
 
 namespace MapleHelper.App.Features.Settings;
@@ -39,22 +41,44 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly ISettingsService _settings;
     private readonly ISecretStore _secrets;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly IUpdateService _updates;
+    private readonly AppPaths _paths;
+    private readonly bool _initialized;
 
     public SettingsViewModel(
         IAiProviderRegistry registry,
         ISettingsService settings,
         ISecretStore secrets,
+        HotkeySettingsViewModel hotkeys,
+        IUpdateService updates,
+        AppPaths paths,
         ILogger<SettingsViewModel> logger)
     {
         _registry = registry;
         _settings = settings;
         _secrets = secrets;
+        _updates = updates;
+        _paths = paths;
         _logger = logger;
+        Hotkeys = hotkeys;
 
         Providers = registry.All.Select(ProviderOption.From).ToList();
-        _minimizeToTrayOnClose = settings.Current.MinimizeToTrayOnClose;
         SelectedProvider = Providers.First(p => p.Kind == settings.Current.Ai.ActiveProvider);
+
+        var s = settings.Current;
+        _minimizeToTrayOnClose = s.MinimizeToTrayOnClose;
+        _showOverlayOnStartup = s.Overlay.ShowOnStartup;
+        _autoCloseChat = s.Overlay.AutoCloseChatAfterCopy;
+        _classicOnly = s.News.ClassicOnly;
+        _notifyNewArticles = s.News.NotifyNewArticles;
+        _repositoryUrl = s.Updates.RepositoryUrl;
+        _checkUpdatesOnStartup = s.Updates.CheckOnStartup;
+        _initialized = true;
     }
+
+    public HotkeySettingsViewModel Hotkeys { get; }
+
+    public string Version => _updates.CurrentVersion;
 
     public IReadOnlyList<ProviderOption> Providers { get; }
 
@@ -73,8 +97,84 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isApiKeyVisible;
 
+    // Tuỳ chọn chung: lưu ngay khi đổi
+    [ObservableProperty] private bool _minimizeToTrayOnClose;
+    [ObservableProperty] private bool _showOverlayOnStartup;
+    [ObservableProperty] private bool _autoCloseChat;
+    [ObservableProperty] private bool _classicOnly;
+    [ObservableProperty] private bool _notifyNewArticles;
+    [ObservableProperty] private bool _checkUpdatesOnStartup;
+
+    // Cập nhật
+    [ObservableProperty] private string _repositoryUrl;
+    [ObservableProperty] private string? _updateStatus;
+    [ObservableProperty] private bool _isUpdateAvailable;
+    [ObservableProperty] private int _updateProgress;
+
     [ObservableProperty]
-    private bool _minimizeToTrayOnClose;
+    [NotifyCanExecuteChangedFor(nameof(CheckUpdatesCommand), nameof(InstallUpdateCommand))]
+    private bool _isUpdating;
+
+    partial void OnMinimizeToTrayOnCloseChanged(bool value) => SaveGeneral(s => s.MinimizeToTrayOnClose = value);
+    partial void OnShowOverlayOnStartupChanged(bool value) => SaveGeneral(s => s.Overlay.ShowOnStartup = value);
+    partial void OnAutoCloseChatChanged(bool value) => SaveGeneral(s => s.Overlay.AutoCloseChatAfterCopy = value);
+    partial void OnClassicOnlyChanged(bool value) => SaveGeneral(s => s.News.ClassicOnly = value);
+    partial void OnNotifyNewArticlesChanged(bool value) => SaveGeneral(s => s.News.NotifyNewArticles = value);
+    partial void OnCheckUpdatesOnStartupChanged(bool value) => SaveGeneral(s => s.Updates.CheckOnStartup = value);
+
+    private async void SaveGeneral(Action<AppSettings> apply)
+    {
+        if (!_initialized)
+        {
+            return;
+        }
+        apply(_settings.Current);
+        await _settings.SaveAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanCheckUpdates))]
+    private async Task CheckUpdatesAsync()
+    {
+        IsUpdating = true;
+        try
+        {
+            _settings.Current.Updates.RepositoryUrl = RepositoryUrl.Trim();
+            await _settings.SaveAsync();
+            UpdateStatus = "Đang kiểm tra…";
+            var result = await _updates.CheckAsync();
+            UpdateStatus = result.Message;
+            IsUpdateAvailable = result.Status == Core.Updates.UpdateStatus.Available;
+        }
+        finally
+        {
+            IsUpdating = false;
+        }
+    }
+
+    private bool CanCheckUpdates() => !IsUpdating;
+
+    [RelayCommand(CanExecute = nameof(CanCheckUpdates))]
+    private async Task InstallUpdateAsync()
+    {
+        IsUpdating = true;
+        try
+        {
+            UpdateStatus = "Đang tải bản cập nhật…";
+            await _updates.DownloadAndRestartAsync(new Progress<int>(p => UpdateProgress = p));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Cài bản cập nhật thất bại");
+            UpdateStatus = "Cập nhật thất bại: " + ex.Message;
+        }
+        finally
+        {
+            IsUpdating = false;
+        }
+    }
+
+    [RelayCommand]
+    private void OpenDataFolder() => Process.Start(new ProcessStartInfo(_paths.Root) { UseShellExecute = true });
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestConnectionCommand), nameof(SaveCommand))]
@@ -115,7 +215,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         var ai = _settings.Current.Ai;
         ai.ActiveProvider = kind;
         ai.Models[kind] = string.IsNullOrWhiteSpace(Model) ? SelectedProvider.DefaultModel : Model.Trim();
-        _settings.Current.MinimizeToTrayOnClose = MinimizeToTrayOnClose;
 
         await _settings.SaveAsync();
         SetStatus(StatusKind.Success, $"Đã lưu. Đang dùng {SelectedProvider.DisplayName} · {ai.Models[kind]}.");

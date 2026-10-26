@@ -1,0 +1,105 @@
+<UserControl x:Class="MapleHelper.App.Features.News.NewsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:MapleHelper.App.Features.News"
+             xmlns:controls="clr-namespace:MapleHelper.App.Controls"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:NewsViewModel}"
+             Loaded="OnLoaded">
+
+    <UserControl.Resources>
+        <ResourceDictionary Source="NewsCardTemplate.xaml" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- Danh sách -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      Visibility="{Binding Detail, Converter={StaticResource NullToCollapsed}, ConverterParameter=invert, FallbackValue=Visible}"
+                      x:Name="ListScroller">
+            <StackPanel Margin="24,20">
+                <controls:PageBanner Title="Điểm tin" Subtitle="Tin tức MapleStory Classic World, đã dịch sang tiếng Việt" />
+
+                <Grid Margin="0,16,0,8">
+                    <ListBox Style="{StaticResource ChipList}" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                             DisplayMemberPath="Label" />
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Top" Command="{Binding RefreshCommand}" Padding="12,5">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72C;" Style="{StaticResource Text.Icon}" FontSize="12" />
+                            <TextBlock Text="Làm mới" Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Visibility="{Binding Status, Converter={StaticResource NullToCollapsed}}">
+                    <controls:AnimatedSprite Sprite="mobs/snail" Scale="0.6" Flip="True"
+                                             Visibility="{Binding IsRefreshing, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Hint}" FontSize="12.5" VerticalAlignment="Center" Margin="6,0,0,0" />
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding Articles}" ItemTemplate="{StaticResource NewsCard}" />
+
+                <controls:EmptyState Sprite="mobs/blue-mushroom" Title="Chưa có tin nào"
+                                     Text="Bấm Làm mới để tải tin từ trang chủ Nexon."
+                                     Visibility="{Binding Articles.Count, Converter={StaticResource ZeroToVisible}}" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Chi tiết bài viết -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" DataContext="{Binding Detail}"
+                      Visibility="{Binding Converter={StaticResource NullToCollapsed}}">
+            <StackPanel Margin="24,20" MaxWidth="860" d:DataContext="{d:DesignInstance Type=local:ArticleDetailViewModel}">
+                <Button Command="{Binding BackCommand}" HorizontalAlignment="Left" Padding="10,5">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE72B;" Style="{StaticResource Text.Icon}" FontSize="12" />
+                        <TextBlock Text="Quay lại danh sách" Margin="6,0,0,0" />
+                    </StackPanel>
+                </Button>
+
+                <Border CornerRadius="12" ClipToBounds="True" Margin="0,14,0,0" MaxHeight="300">
+                    <Image Source="{Binding Item.ImageUrl, Converter={StaticResource WebImageLarge}}" Stretch="UniformToFill" />
+                </Border>
+
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                    <Border Style="{StaticResource Tag}" Background="{Binding Item.CategoryBackground}">
+                        <TextBlock Text="{Binding Item.CategoryLabel}" FontSize="11" FontWeight="Bold" Foreground="{Binding Item.CategoryForeground}" />
+                    </Border>
+                    <TextBlock Text="{Binding Item.DateText}" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="{Binding Item.Title}" FontSize="22" FontWeight="Bold" TextWrapping="Wrap" Margin="0,8,0,0" />
+                <TextBlock Text="{Binding Item.OriginalTitle}" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" TextWrapping="Wrap"
+                           Visibility="{Binding Item.OriginalTitle, Converter={StaticResource NullToCollapsed}}" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="Mở bài gốc trên nexon.com" Command="{Binding OpenOriginalCommand}" Padding="12,5" />
+                    <Button Content="Xem / ẩn bản tiếng Anh" Command="{Binding ToggleOriginalCommand}" Padding="12,5" Margin="8,0,0,0"
+                            Visibility="{Binding OriginalBody, Converter={StaticResource NullToCollapsed}}" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,18,0,0" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+                    <controls:AnimatedSprite Sprite="mobs/slime" Scale="0.8" FrameInterval="0:0:0.12" />
+                    <TextBlock Text="Đang tải và dịch bài viết… bài dài có thể mất vài chục giây." VerticalAlignment="Center" Margin="10,0,0,0"
+                               Foreground="{StaticResource Brush.TextSecondary}" />
+                </StackPanel>
+
+                <Border Background="{StaticResource Brush.DangerSoft}" CornerRadius="8" Padding="12,8" Margin="0,14,0,0"
+                        Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}">
+                    <TextBlock Text="{Binding Error}" TextWrapping="Wrap" Foreground="{StaticResource Brush.DangerText}" />
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,16,0,0" Visibility="{Binding Body, Converter={StaticResource NullToCollapsed}}">
+                    <controls:MarkdownViewer Markdown="{Binding Body}" FontSize="14" />
+                </Border>
+
+                <Border Style="{StaticResource Card}" Margin="0,16,0,0" Background="{StaticResource Brush.SurfaceAlt}"
+                        Visibility="{Binding ShowOriginal, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="Bản gốc tiếng Anh" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,8" />
+                        <controls:MarkdownViewer Markdown="{Binding OriginalBody}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

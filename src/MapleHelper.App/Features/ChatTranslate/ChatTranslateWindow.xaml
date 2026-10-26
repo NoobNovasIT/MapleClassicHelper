@@ -1,0 +1,77 @@
+<Window x:Class="MapleHelper.App.Features.ChatTranslate.ChatTranslateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MapleHelper.App.Features.ChatTranslate"
+        xmlns:controls="clr-namespace:MapleHelper.App.Controls"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=local:ChatTranslateViewModel}"
+        Title="Chat Việt → Anh"
+        Width="460" SizeToContent="Height"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        FontFamily="Segoe UI">
+
+    <Border Style="{StaticResource Popup.Card}">
+        <StackPanel Margin="14,10,14,14">
+            <!-- Thanh tiêu đề: kéo để di chuyển -->
+            <Grid MouseLeftButtonDown="OnHeaderMouseDown" Background="Transparent" Margin="0,0,0,8">
+                <StackPanel Orientation="Horizontal">
+                    <controls:AnimatedSprite Sprite="mobs/blue-snail" Scale="0.75" Flip="True" VerticalAlignment="Bottom" />
+                    <TextBlock Text="Chat Việt → Anh" FontWeight="Bold" FontSize="14" Foreground="{StaticResource Brush.AccentText}"
+                               VerticalAlignment="Center" Margin="8,0,0,0" />
+                </StackPanel>
+                <Button Content="&#xE711;" Style="{StaticResource Button.Icon}" HorizontalAlignment="Right" Click="OnCloseClick" ToolTip="Đóng (Esc)" />
+            </Grid>
+
+            <TextBox x:Name="InputBox" Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}"
+                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="44" MaxHeight="120" FontSize="14"
+                     VerticalContentAlignment="Top" PreviewKeyDown="OnInputKeyDown"
+                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}" />
+
+            <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="8" Padding="10,8" Margin="0,8,0,0"
+                    Visibility="{Binding Output, Converter={StaticResource NullToCollapsed}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding Output, Mode=OneWay}" IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                             TextWrapping="Wrap" FontSize="14" FontWeight="SemiBold" Padding="0" />
+                    <Button Grid.Column="1" Content="&#xE8C8;" Style="{StaticResource Button.Icon}" ToolTip="Copy lại"
+                            Command="{Binding CopyCommand}" CommandParameter="{Binding Output}" VerticalAlignment="Top" />
+                </Grid>
+            </Border>
+
+            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" Margin="2,8,0,0">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsError}" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.DangerText}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <!-- Vài câu gần đây, bấm để copy lại -->
+            <ItemsControl ItemsSource="{Binding Recent}" Margin="0,8,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:ChatLine}">
+                        <Button Command="{Binding DataContext.CopyCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding English}" Margin="0,2" Padding="8,4" HorizontalContentAlignment="Stretch"
+                                ToolTip="Bấm để copy">
+                            <StackPanel>
+                                <TextBlock Text="{Binding English}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Vietnamese}" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</Window>
