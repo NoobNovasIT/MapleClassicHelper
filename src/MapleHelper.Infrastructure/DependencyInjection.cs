@@ -24,8 +24,8 @@ public static class DependencyInjection
         services.AddSingleton<ISettingsService, JsonSettingsService>();
         services.AddSingleton<ISecretStore, DpapiSecretStore>();
 
-        // AI: web search có thể mất cả phút, timeout rộng hơn mặc định
-        var aiTimeout = TimeSpan.FromSeconds(120);
+        // AI: web search và dịch bài dài có thể mất vài phút
+        var aiTimeout = TimeSpan.FromSeconds(240);
         services.AddHttpClient<GeminiProvider>(c => c.Timeout = aiTimeout);
         services.AddHttpClient<OpenAiProvider>(c => c.Timeout = aiTimeout);
         services.AddHttpClient<ClaudeProvider>(c => c.Timeout = aiTimeout);

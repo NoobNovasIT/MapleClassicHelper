@@ -25,7 +25,7 @@ public sealed class NewsService(
     IAiService ai,
     ISettingsService settings) : INewsService
 {
-    private const int TranslateBatchSize = 15;
+    private const int TranslateBatchSize = 8;
     private const int BodyChunkChars = 7000;
 
     internal const string SystemPrompt =

@@ -116,7 +116,8 @@ public class GeminiModelTests
     [Theory]
     [InlineData("gemini-2.5-flash", "thinkingBudget")]
     [InlineData("gemini-3.8-flash", "thinkingLevel")]
-    [InlineData("gemini-flash-latest", null)]
+    [InlineData("gemini-flash-latest", "thinkingLevel")]
+    [InlineData("gemini-2.5-pro", null)]
     public void Thinking_config_depends_on_model_family(string model, string? expectedKey)
     {
         var config = GeminiProvider.BuildThinkingConfig(model);

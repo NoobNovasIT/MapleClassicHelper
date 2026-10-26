@@ -52,7 +52,8 @@
                 <!-- Nút vào overlay: cây nấm cam đứng trên nút -->
                 <StackPanel DockPanel.Dock="Bottom">
                     <controls:AnimatedSprite Sprite="mobs/ribbon-pig" Scale="0.8" HorizontalAlignment="Right" Margin="0,0,14,-6" Panel.ZIndex="1" />
-                    <Button Style="{StaticResource Button.Primary}" Command="{Binding StartOverlayCommand}" Padding="12,10">
+                    <Button Style="{StaticResource Button.Primary}" Command="{Binding StartOverlayCommand}" Padding="12,10"
+                            AutomationProperties.Name="{Binding OverlayButtonText}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE768;" Style="{StaticResource Text.Icon}" FontSize="14" Foreground="White" />
                             <TextBlock Text="{Binding OverlayButtonText}" Margin="8,0,0,0" Foreground="White" FontWeight="Bold" />

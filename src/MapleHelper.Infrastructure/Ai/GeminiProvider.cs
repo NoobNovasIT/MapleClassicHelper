@@ -47,14 +47,28 @@ public sealed partial class GeminiProvider(HttpClient http) : AiProviderBase(htt
     public override async Task<AiResponse> GenerateAsync(AiConnection connection, AiRequest request, CancellationToken ct = default)
     {
         var body = BuildGenerateBody(connection.Model, request);
-        var json = await SendAsync(() =>
+        JsonNode json;
+        try
+        {
+            json = await PostGenerateAsync(connection, body, ct);
+        }
+        catch (AiException ex) when (ex.Kind == AiErrorKind.Unknown
+                                     && ex.Message.Contains("thinking", StringComparison.OrdinalIgnoreCase)
+                                     && body["generationConfig"] is JsonObject config && config.Remove("thinkingConfig"))
+        {
+            // Model không nhận kiểu thinkingConfig này (vd. alias trỏ về bản cũ): gửi lại với cấu hình mặc định
+            json = await PostGenerateAsync(connection, body, ct);
+        }
+        return ParseGenerateResponse(json);
+    }
+
+    private Task<JsonNode> PostGenerateAsync(AiConnection connection, JsonObject body, CancellationToken ct) =>
+        SendAsync(() =>
         {
             var message = CreateRequest(HttpMethod.Post, $"/models/{connection.Model}:generateContent", connection.ApiKey);
             message.Content = JsonContent(body);
             return message;
         }, ct);
-        return ParseGenerateResponse(json);
-    }
 
     protected override AiException MapError(HttpStatusCode status, string body)
     {
@@ -83,7 +97,8 @@ public sealed partial class GeminiProvider(HttpClient http) : AiProviderBase(htt
         {
             return new JsonObject { ["thinkingBudget"] = 0 };
         }
-        if (model.StartsWith("gemini-3", StringComparison.Ordinal))
+        // Gemini 3 trở đi và alias "-latest" (đang trỏ tới Gemini 3.x) dùng thinkingLevel
+        if (model.StartsWith("gemini-3", StringComparison.Ordinal) || model.EndsWith("-latest", StringComparison.Ordinal))
         {
             return new JsonObject { ["thinkingLevel"] = "low" };
         }

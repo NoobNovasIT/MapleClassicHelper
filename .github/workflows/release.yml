@@ -1,0 +1,29 @@
+# Push tag v*.*.* (vd. v0.2.0) để build bộ cài Velopack và đăng lên GitHub Releases.
+# App đã cài sẽ tự thấy bản mới (Cài đặt → Cập nhật).
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Test
+        run: dotnet test --solution MapleClassicHelper.sln -c Release
+
+      - name: Build installer and upload
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          ./build/publish.ps1 -Version $version -Upload -Repo '${{ github.server_url }}/${{ github.repository }}' -Token '${{ secrets.GITHUB_TOKEN }}'
