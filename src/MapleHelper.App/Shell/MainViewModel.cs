@@ -27,6 +27,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public IReadOnlyList<NavItem> NavItems { get; }
 
+    public string OverlayHotkeyText => "Hotkey: Ctrl + Shift + M";
+
     [ObservableProperty]
     private NavItem? _selectedNav;
 

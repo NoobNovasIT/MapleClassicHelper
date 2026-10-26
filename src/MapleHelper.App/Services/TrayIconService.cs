@@ -1,6 +1,5 @@
-using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using H.NotifyIcon;
 using H.NotifyIcon.Core;
 
@@ -21,14 +20,7 @@ public sealed class TrayIconService : IDisposable
         {
             ToolTipText = "Maple Classic Helper",
             ContextMenu = menu,
-            // Icon tạm sinh từ chữ, thay bằng icon Maple khi có file .ico
-            IconSource = new GeneratedIconSource
-            {
-                Text = "M",
-                Foreground = Brushes.White,
-                Background = (Brush)Application.Current.FindResource("Brush.Accent"),
-                FontWeight = FontWeights.Bold,
-            },
+            IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/Icons/app.ico")),
         };
         _icon.TrayMouseDoubleClick += (_, _) => showMainWindow();
         _icon.ForceCreate(enablesEfficiencyMode: false);

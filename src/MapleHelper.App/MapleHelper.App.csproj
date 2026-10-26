@@ -6,10 +6,16 @@
     <AssemblyName>MapleClassicHelper</AssemblyName>
     <RootNamespace>MapleHelper.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\Assets\Icons\app.ico</ApplicationIcon>
     <!-- Main tự viết trong Program.cs (Velopack + single instance chạy trước WPF) -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <StartupObject>MapleHelper.App.Program</StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Nhúng toàn bộ Assets/ ở gốc repo, truy cập bằng pack URI /Assets/... -->
+    <Resource Include="..\..\Assets\**\*.png;..\..\Assets\**\*.ico" Link="Assets\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MapleHelper.Core\MapleHelper.Core.csproj" />

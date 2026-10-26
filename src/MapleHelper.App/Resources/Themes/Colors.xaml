@@ -1,29 +1,39 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <SolidColorBrush x:Key="Brush.Background" Color="#F7F5F0" />
+    <!-- Tông kem/nâu/cam lấy cảm hứng từ UI MapleStory, xanh trời cho banner -->
+    <SolidColorBrush x:Key="Brush.Background" Color="#FFF7E8" />
     <SolidColorBrush x:Key="Brush.Surface" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#F1EEE7" />
-    <SolidColorBrush x:Key="Brush.Border" Color="#E3DED3" />
-    <SolidColorBrush x:Key="Brush.BorderStrong" Color="#C9C2B4" />
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="#FFF0D9" />
+    <SolidColorBrush x:Key="Brush.Border" Color="#F1DFC1" />
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="#DDBF92" />
 
-    <SolidColorBrush x:Key="Brush.Text" Color="#2B2A27" />
-    <SolidColorBrush x:Key="Brush.TextSecondary" Color="#6B6860" />
-    <SolidColorBrush x:Key="Brush.TextMuted" Color="#9A968C" />
+    <SolidColorBrush x:Key="Brush.Text" Color="#4A2C17" />
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="#7A5A3E" />
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="#A88A6C" />
 
-    <SolidColorBrush x:Key="Brush.Accent" Color="#E8781E" />
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="#CF6814" />
-    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#FDEBDA" />
-    <SolidColorBrush x:Key="Brush.AccentText" Color="#8A4210" />
+    <SolidColorBrush x:Key="Brush.Accent" Color="#F08A1C" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="#D9740C" />
+    <SolidColorBrush x:Key="Brush.AccentSoft" Color="#FFE5C2" />
+    <SolidColorBrush x:Key="Brush.AccentText" Color="#8A460B" />
 
-    <SolidColorBrush x:Key="Brush.SuccessSoft" Color="#E6F2E1" />
+    <SolidColorBrush x:Key="Brush.Sky" Color="#2FA4FF" />
+    <SolidColorBrush x:Key="Brush.SkyDeep" Color="#2186D6" />
+    <SolidColorBrush x:Key="Brush.Ground" Color="#D9C29A" />
+    <SolidColorBrush x:Key="Brush.Leaf" Color="#6DB33F" />
+
+    <SolidColorBrush x:Key="Brush.SuccessSoft" Color="#E5F2DA" />
     <SolidColorBrush x:Key="Brush.SuccessText" Color="#2F5E1C" />
-    <SolidColorBrush x:Key="Brush.DangerSoft" Color="#FBE7E6" />
+    <SolidColorBrush x:Key="Brush.DangerSoft" Color="#FBE4E1" />
     <SolidColorBrush x:Key="Brush.DangerText" Color="#8F2420" />
-    <SolidColorBrush x:Key="Brush.InfoSoft" Color="#E6EFF9" />
+    <SolidColorBrush x:Key="Brush.InfoSoft" Color="#E3F0FB" />
     <SolidColorBrush x:Key="Brush.InfoText" Color="#1F4A7A" />
 
+    <!-- Overlay nằm trên nền game nên dùng nền tối bán trong suốt -->
+    <SolidColorBrush x:Key="Brush.OverlaySurface" Color="#F2FFFBF2" />
+    <SolidColorBrush x:Key="Brush.Shadow" Color="#33000000" />
+
     <FontFamily x:Key="Font.Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
-    <CornerRadius x:Key="Radius.Control">6</CornerRadius>
-    <CornerRadius x:Key="Radius.Card">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Control">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Card">12</CornerRadius>
 </ResourceDictionary>

@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:MapleHelper.App.Features.Settings"
              xmlns:res="clr-namespace:MapleHelper.App.Resources"
+             xmlns:controls="clr-namespace:MapleHelper.App.Controls"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:SettingsViewModel}">
 
@@ -14,8 +15,9 @@
         <res:NullToCollapsedConverter x:Key="NullToCollapsed" />
     </UserControl.Resources>
 
-    <StackPanel Margin="28,24" MaxWidth="720" HorizontalAlignment="Left">
-        <TextBlock Text="Cài đặt" Style="{StaticResource Text.PageTitle}" />
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="24,20">
+        <controls:PageBanner Title="Cài đặt" Subtitle="Đơn vị AI, hotkey và các tuỳ chọn chung" />
 
         <!-- Đơn vị AI -->
         <Border Style="{StaticResource Card}" Margin="0,16,0,0">
@@ -104,4 +106,5 @@
             </StackPanel>
         </Border>
     </StackPanel>
+    </ScrollViewer>
 </UserControl>
