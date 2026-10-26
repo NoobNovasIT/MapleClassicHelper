@@ -10,6 +10,7 @@ using MapleHelper.Infrastructure.MapleData;
 using MapleHelper.Infrastructure.News;
 using MapleHelper.Infrastructure.Persistence;
 using MapleHelper.Infrastructure.Settings;
+using MapleHelper.Infrastructure.Translation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MapleHelper.Infrastructure;
@@ -49,6 +50,8 @@ public static class DependencyInjection
             c.Timeout = TimeSpan.FromSeconds(30);
             c.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         });
+
+        services.AddHttpClient<IMachineTranslator, GoogleTranslateClient>(c => c.Timeout = TimeSpan.FromSeconds(10));
 
         // Tính năng
         services.AddSingleton<ITranslationService, TranslationService>();

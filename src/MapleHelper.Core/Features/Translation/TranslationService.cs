@@ -13,18 +13,8 @@ public interface ITranslationService
     Task<ScreenTranslation> TranslateScreenAsync(byte[] png, CancellationToken ct = default);
 }
 
-public sealed class TranslationService(IAiService ai) : ITranslationService
+public sealed class TranslationService(IAiService ai, IMachineTranslator machine) : ITranslationService
 {
-    internal const string ChatSystemPrompt = """
-        You translate Vietnamese chat messages into English for players of MapleStory Classic World.
-        Rules:
-        - Sound like a real player typing in game chat: short, casual, natural.
-        - Use common MapleStory slang only when it fits (pt, lf, lfm, ty, np, gg, brb, afk, cc, mesos).
-        - Keep player names, numbers, prices and item/map/monster names exactly as written.
-        - Vietnamese gamer shorthand: "pt" = party, "ae" = guys, "đc" = ok/can, "k"/"ko" = no, "tr" = million mesos, "k" after a number = thousand.
-        - Output only the English message. No quotes, no explanation, no alternatives.
-        """;
-
     internal const string ScreenPrompt = """
         Ảnh là một phần giao diện game MapleStory Classic World (hội thoại NPC, nhiệm vụ, thông báo, mô tả vật phẩm, kỹ năng...).
         1. Đọc chính xác toàn bộ chữ tiếng Anh trong ảnh, giữ xuống dòng hợp lý.
@@ -39,16 +29,9 @@ public sealed class TranslationService(IAiService ai) : ITranslationService
         Chỉ trả về đúng một JSON: {"source": "<chữ gốc>", "translation": "<bản dịch tiếng Việt>"}
         """;
 
-    public async Task<string> TranslateChatAsync(string vietnamese, CancellationToken ct = default)
-    {
-        var response = await ai.GenerateAsync(new AiRequest
-        {
-            SystemPrompt = ChatSystemPrompt,
-            Prompt = vietnamese.Trim(),
-            MaxOutputTokens = 2048,
-        }, ct);
-        return CleanChatOutput(response.Text);
-    }
+    /// <summary>Chat cần nhanh nên dùng Google Dịch, không qua AI.</summary>
+    public async Task<string> TranslateChatAsync(string vietnamese, CancellationToken ct = default) =>
+        CleanChatOutput(await machine.TranslateAsync(vietnamese.Trim(), "vi", "en", ct));
 
     public async Task<ScreenTranslation> TranslateScreenAsync(byte[] png, CancellationToken ct = default)
     {

@@ -7,7 +7,7 @@ Công cụ overlay giúp người chơi Việt Nam chơi **MapleStory Classic Wo
   1. **Dịch vùng chọn**: kéo chọn hội thoại, quest, thông báo… để dịch ngay.
   2. **Tìm nguồn item**: chụp tooltip vật phẩm, tra quái rơi, quest thưởng, nơi mua.
   3. **Hỗ trợ quest**: chụp tên nhiệm vụ, nhận hướng dẫn từng bước và link video.
-  4. **Chat Việt → Anh**: gõ tiếng Việt, Enter, câu tiếng Anh được copy sẵn để dán vào ô chat.
+  4. **Chat Việt → Anh**: gõ tiếng Việt, Enter, câu tiếng Anh được copy sẵn để dán vào ô chat (dùng Google Dịch, không tốn quota AI).
 - Hotkey toàn cục cho từng chức năng (mặc định `Ctrl+Shift+M` và `Ctrl+Shift+1..4`), đổi được trong Cài đặt.
 - Chọn được nhà cung cấp AI: **Gemini** (mặc định, có free tier), OpenAI, Claude, DeepSeek (chỉ text).
 

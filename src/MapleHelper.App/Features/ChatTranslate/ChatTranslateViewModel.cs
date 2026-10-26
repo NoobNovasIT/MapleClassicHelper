@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MapleHelper.App.Services;
-using MapleHelper.Core.Ai;
 using MapleHelper.Core.Features.Translation;
 using MapleHelper.Core.History;
 using MapleHelper.Core.Settings;
@@ -83,7 +82,7 @@ public sealed partial class ChatTranslateViewModel(
                 Status = "Không copy được vào clipboard, hãy bấm Copy để thử lại.";
             }
         }
-        catch (AiException ex)
+        catch (MachineTranslationException ex)
         {
             IsError = true;
             Status = ex.Message;

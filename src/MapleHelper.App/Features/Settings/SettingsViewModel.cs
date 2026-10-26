@@ -28,8 +28,8 @@ public sealed record ProviderOption(
     AiCapabilities Capabilities)
 {
     public string CapabilityText => Capabilities.HasFlag(AiCapabilities.Vision)
-        ? "Đọc ảnh, tìm kiếm web: dùng được cả 4 nút overlay"
-        : "Chỉ xử lý text: chỉ dùng được nút 4 (chat Việt → Anh)";
+        ? "Đọc ảnh, tìm kiếm web: dùng được cho dịch tin và nút 1–3 (nút 4 dùng Google Dịch, không cần AI)"
+        : "Chỉ xử lý text: dịch được tin tức, nhưng nút 1–3 cần AI đọc được ảnh";
 
     public static ProviderOption From(IAiProvider p) =>
         new(p.Kind, p.DisplayName, p.DefaultModel, p.SuggestedModels, p.ApiKeyUrl, p.Capabilities);
