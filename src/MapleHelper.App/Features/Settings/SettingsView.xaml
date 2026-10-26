@@ -147,6 +147,12 @@
             <StackPanel>
                 <TextBlock Text="Tuỳ chọn" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12" />
                 <CheckBox Content="Mở overlay ngay khi khởi động app" IsChecked="{Binding ShowOverlayOnStartup}" Margin="0,0,0,8" />
+                <CheckBox IsChecked="{Binding UseAiForScreenTranslate}" Margin="0,0,0,8">
+                    <TextBlock TextWrapping="Wrap">
+                        Nút 1 (dịch vùng chọn) dùng AI thay vì Google Dịch.
+                        <Run Foreground="{StaticResource Brush.TextMuted}" Text="Chậm hơn nhưng giữ tên quái/item/NPC và đọc chữ nhỏ tốt hơn. Mặc định: OCR của Windows + Google Dịch." />
+                    </TextBlock>
+                </CheckBox>
                 <CheckBox Content="Điểm tin: chỉ hiện tin MapleStory Classic World" IsChecked="{Binding ClassicOnly}" Margin="0,0,0,8" />
                 <CheckBox Content="Điểm tin: thông báo ở khay hệ thống khi có tin mới" IsChecked="{Binding NotifyNewArticles}" Margin="0,0,0,8" />
                 <CheckBox Content="Bấm X thì ẩn xuống khay hệ thống (hotkey vẫn hoạt động)" IsChecked="{Binding MinimizeToTrayOnClose}" />

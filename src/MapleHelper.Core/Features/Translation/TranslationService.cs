@@ -1,4 +1,5 @@
 using MapleHelper.Core.Ai;
+using MapleHelper.Core.Settings;
 
 namespace MapleHelper.Core.Features.Translation;
 
@@ -13,8 +14,14 @@ public interface ITranslationService
     Task<ScreenTranslation> TranslateScreenAsync(byte[] png, CancellationToken ct = default);
 }
 
-public sealed class TranslationService(IAiService ai, IMachineTranslator machine) : ITranslationService
+public sealed class TranslationService(
+    IAiService ai,
+    IMachineTranslator machine,
+    ITextRecognizer ocr,
+    ISettingsService settings) : ITranslationService
 {
+    internal const string NoTextFound = "Không tìm thấy chữ trong ảnh. Thử kéo chọn sát vùng chữ hơn.";
+
     internal const string ScreenPrompt = """
         Ảnh là một phần giao diện game MapleStory Classic World (hội thoại NPC, nhiệm vụ, thông báo, mô tả vật phẩm, kỹ năng...).
         1. Đọc chính xác toàn bộ chữ tiếng Anh trong ảnh, giữ xuống dòng hợp lý.
@@ -33,7 +40,25 @@ public sealed class TranslationService(IAiService ai, IMachineTranslator machine
     public async Task<string> TranslateChatAsync(string vietnamese, CancellationToken ct = default) =>
         CleanChatOutput(await machine.TranslateAsync(vietnamese.Trim(), "vi", "en", ct));
 
-    public async Task<ScreenTranslation> TranslateScreenAsync(byte[] png, CancellationToken ct = default)
+    public Task<ScreenTranslation> TranslateScreenAsync(byte[] png, CancellationToken ct = default) =>
+        settings.Current.Overlay.ScreenTranslateEngine == ScreenTranslateEngine.Ai
+            ? TranslateScreenWithAiAsync(png, ct)
+            : TranslateScreenWithGoogleAsync(png, ct);
+
+    /// <summary>Mặc định: OCR của Windows (offline) rồi Google Dịch, thường dưới 2 giây.</summary>
+    private async Task<ScreenTranslation> TranslateScreenWithGoogleAsync(byte[] png, CancellationToken ct)
+    {
+        var source = OcrText.JoinLines(await ocr.RecognizeLinesAsync(png, ct));
+        if (source.Length == 0)
+        {
+            return new ScreenTranslation("", NoTextFound);
+        }
+        // "auto": chữ trong game là tiếng Anh, nhưng để Google tự nhận phòng khi chọn nhầm vùng chữ khác
+        var translation = await machine.TranslateAsync(source, "auto", "vi", ct);
+        return new ScreenTranslation(source, translation);
+    }
+
+    private async Task<ScreenTranslation> TranslateScreenWithAiAsync(byte[] png, CancellationToken ct)
     {
         var response = await ai.GenerateAsync(new AiRequest
         {

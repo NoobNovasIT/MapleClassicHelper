@@ -4,7 +4,7 @@ Công cụ overlay giúp người chơi Việt Nam chơi **MapleStory Classic Wo
 
 - **Điểm tin**: tin tức chính thức từ nexon.com (lọc riêng Classic World), tự dịch sang tiếng Việt, giờ bảo trì quy đổi sang giờ VN.
 - **Overlay trên game**: nút nấm cam nổi trên màn hình, bấm bung 4 nút:
-  1. **Dịch vùng chọn**: kéo chọn hội thoại, quest, thông báo… để dịch ngay.
+  1. **Dịch vùng chọn**: kéo chọn hội thoại, quest, thông báo… để dịch ngay (OCR của Windows + Google Dịch, khoảng 1–2 giây; có tuỳ chọn dùng AI).
   2. **Tìm nguồn item**: chụp tooltip vật phẩm, tra quái rơi, quest thưởng, nơi mua.
   3. **Hỗ trợ quest**: chụp tên nhiệm vụ, nhận hướng dẫn từng bước và link video.
   4. **Chat Việt → Anh**: gõ tiếng Việt, Enter, câu tiếng Anh được copy sẵn để dán vào ô chat (dùng Google Dịch, không tốn quota AI).

@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
+    <!-- Test OCR vẽ chữ bằng WPF để tạo ảnh mẫu -->
+    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +19,9 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <!-- UseWPF tắt hai implicit using này -->
+    <Using Include="System.Net.Http" />
+    <Using Include="System.IO" />
   </ItemGroup>
 
 </Project>

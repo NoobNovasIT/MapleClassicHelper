@@ -61,8 +61,17 @@ public sealed class OverlaySettings
     public double? CenterX { get; set; }
     public double? CenterY { get; set; }
 
+    /// <summary>Nút 1: Google (OCR của Windows + Google Dịch, nhanh) hoặc AI (chậm hơn, giữ tên riêng tốt hơn).</summary>
+    public ScreenTranslateEngine ScreenTranslateEngine { get; set; } = ScreenTranslateEngine.Google;
+
     /// <summary>Mở overlay luôn khi khởi động app.</summary>
     public bool ShowOnStartup { get; set; }
+}
+
+public enum ScreenTranslateEngine
+{
+    Google,
+    Ai,
 }
 
 public enum HotkeyAction

@@ -52,6 +52,7 @@ public static class DependencyInjection
         });
 
         services.AddHttpClient<IMachineTranslator, GoogleTranslateClient>(c => c.Timeout = TimeSpan.FromSeconds(10));
+        services.AddSingleton<ITextRecognizer, WindowsOcrRecognizer>();
 
         // Tính năng
         services.AddSingleton<ITranslationService, TranslationService>();

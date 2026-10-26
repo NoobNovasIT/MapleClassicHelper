@@ -68,6 +68,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var s = settings.Current;
         _minimizeToTrayOnClose = s.MinimizeToTrayOnClose;
         _showOverlayOnStartup = s.Overlay.ShowOnStartup;
+        _useAiForScreenTranslate = s.Overlay.ScreenTranslateEngine == ScreenTranslateEngine.Ai;
         _classicOnly = s.News.ClassicOnly;
         _notifyNewArticles = s.News.NotifyNewArticles;
         _repositoryUrl = s.Updates.RepositoryUrl;
@@ -99,6 +100,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     // Tuỳ chọn chung: lưu ngay khi đổi
     [ObservableProperty] private bool _minimizeToTrayOnClose;
     [ObservableProperty] private bool _showOverlayOnStartup;
+    [ObservableProperty] private bool _useAiForScreenTranslate;
     [ObservableProperty] private bool _classicOnly;
     [ObservableProperty] private bool _notifyNewArticles;
     [ObservableProperty] private bool _checkUpdatesOnStartup;
@@ -115,6 +117,8 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     partial void OnMinimizeToTrayOnCloseChanged(bool value) => SaveGeneral(s => s.MinimizeToTrayOnClose = value);
     partial void OnShowOverlayOnStartupChanged(bool value) => SaveGeneral(s => s.Overlay.ShowOnStartup = value);
+    partial void OnUseAiForScreenTranslateChanged(bool value) =>
+        SaveGeneral(s => s.Overlay.ScreenTranslateEngine = value ? ScreenTranslateEngine.Ai : ScreenTranslateEngine.Google);
     partial void OnClassicOnlyChanged(bool value) => SaveGeneral(s => s.News.ClassicOnly = value);
     partial void OnNotifyNewArticlesChanged(bool value) => SaveGeneral(s => s.News.NotifyNewArticles = value);
     partial void OnCheckUpdatesOnStartupChanged(bool value) => SaveGeneral(s => s.Updates.CheckOnStartup = value);

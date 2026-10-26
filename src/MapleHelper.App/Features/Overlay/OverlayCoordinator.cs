@@ -60,6 +60,10 @@ public sealed class OverlayCoordinator(
     public IReadOnlyList<HotkeyAction> ApplyHotkeys()
     {
         var failed = hotkeys.Apply(settings.Current.Hotkeys);
+        if (failed.Count > 0)
+        {
+            logger.LogWarning("Không đăng ký được hotkey: {Actions}", string.Join(", ", failed));
+        }
         _overlay?.UpdateTooltips(HotkeyTexts());
         return failed;
     }
@@ -89,6 +93,7 @@ public sealed class OverlayCoordinator(
     public async Task ExecuteAsync(HotkeyAction action)
     {
         var previousForeground = ForegroundWindow.Current;
+        logger.LogInformation("Thực hiện {Action}", action);
         try
         {
             switch (action)
@@ -177,8 +182,10 @@ public sealed class OverlayCoordinator(
         }
         if (snip is null)
         {
+            logger.LogInformation("Người dùng huỷ chọn vùng");
             return;
         }
+        logger.LogInformation("Đã chọn vùng {Width}x{Height}", snip.Physical.Width, snip.Physical.Height);
 
         var png = ScreenCapture.ToPng(snip.Image);
         var viewModel = services.GetRequiredService<ResultPopupViewModel>();
@@ -193,6 +200,10 @@ public sealed class OverlayCoordinator(
             await process(viewModel, png);
         }
         catch (AiException ex)
+        {
+            viewModel.SetError(ex.Message);
+        }
+        catch (MachineTranslationException ex)
         {
             viewModel.SetError(ex.Message);
         }
