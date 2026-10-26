@@ -1,0 +1,107 @@
+<UserControl x:Class="MapleHelper.App.Features.Settings.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:MapleHelper.App.Features.Settings"
+             xmlns:res="clr-namespace:MapleHelper.App.Resources"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:SettingsViewModel}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <res:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
+        <res:NullToCollapsedConverter x:Key="NullToCollapsed" />
+    </UserControl.Resources>
+
+    <StackPanel Margin="28,24" MaxWidth="720" HorizontalAlignment="Left">
+        <TextBlock Text="Cài đặt" Style="{StaticResource Text.PageTitle}" />
+
+        <!-- Đơn vị AI -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="Đơn vị AI" Style="{StaticResource Text.SectionTitle}" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,4,0,16"
+                           Text="AI dùng để dịch, đọc ảnh chụp màn hình và tra cứu item/quest. Key được mã hoá và chỉ lưu trên máy này." />
+
+                <TextBlock Text="Nhà cung cấp" Style="{StaticResource Text.Label}" />
+                <ComboBox ItemsSource="{Binding Providers}" SelectedItem="{Binding SelectedProvider}"
+                          DisplayMemberPath="DisplayName" Width="320" HorizontalAlignment="Left" />
+                <TextBlock Text="{Binding SelectedProvider.CapabilityText}" Style="{StaticResource Text.Hint}" Margin="0,6,0,0" />
+
+                <Grid Margin="0,16,0,4">
+                    <TextBlock Text="API key" Style="{StaticResource Text.Label}" />
+                    <Button Content="Lấy API key ở đâu?" Style="{StaticResource Button.Link}"
+                            Command="{Binding OpenApiKeyPageCommand}" HorizontalAlignment="Right" />
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <PasswordBox x:Name="ApiKeyBox" PasswordChanged="OnPasswordChanged"
+                                 Visibility="{Binding IsApiKeyVisible, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="{Binding IsApiKeyVisible, Converter={StaticResource BoolToVisibility}}" />
+                    <CheckBox Grid.Column="1" Content="Hiện" IsChecked="{Binding IsApiKeyVisible}" Margin="12,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Model" Style="{StaticResource Text.Label}" Margin="0,16,0,4" />
+                <ComboBox IsEditable="True" ItemsSource="{Binding AvailableModels}"
+                          Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}"
+                          Width="320" HorizontalAlignment="Left" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,6,0,0"
+                           Text="Bấm Kiểm tra kết nối để tải danh sách model thật từ nhà cung cấp." />
+
+                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                    <Button Content="Kiểm tra kết nối" Command="{Binding TestConnectionCommand}" />
+                    <Button Content="Lưu" Style="{StaticResource Button.Primary}" Command="{Binding SaveCommand}"
+                            Margin="8,0,0,0" MinWidth="80" />
+                </StackPanel>
+
+                <Border x:Name="StatusBorder" CornerRadius="6" Padding="12,8" Margin="0,14,0,0"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource NullToCollapsed}}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{StaticResource Brush.InfoSoft}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding StatusKind}" Value="Success">
+                                    <Setter Property="Background" Value="{StaticResource Brush.SuccessSoft}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding StatusKind}" Value="Error">
+                                    <Setter Property="Background" Value="{StaticResource Brush.DangerSoft}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontSize="13">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.InfoText}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding StatusKind}" Value="Success">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.SuccessText}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding StatusKind}" Value="Error">
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.DangerText}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- Chung -->
+        <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="Chung" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12" />
+                <CheckBox Content="Bấm X thì ẩn xuống khay hệ thống (hotkey vẫn hoạt động)"
+                          IsChecked="{Binding MinimizeToTrayOnClose}" />
+                <TextBlock Style="{StaticResource Text.Hint}" Margin="0,12,0,0"
+                           Text="Tuỳ chỉnh hotkey sẽ có ở mốc M1." />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
